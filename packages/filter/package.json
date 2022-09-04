@@ -1,0 +1,19 @@
+{
+  "name": "filter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "out/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "inst:pg": "pg-test",
+    "build": "swc src -d out --config-file ../../.swcrc",
+    "start": "node ."
+  },
+  "keywords": [],
+  "author": "HoJeong Go <seia@outlook.kr>",
+  "private": true,
+  "dependencies": {
+    "vertical-radix": "github:seia-soto/vertical-radix"
+  }
+}

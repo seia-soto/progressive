@@ -1,0 +1,242 @@
+[
+  {
+    "name": "atdatabases_migrations_applied",
+    "columns": [
+      {
+        "name": "applied_at",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 1184,
+        "typeName": "TIMESTAMPTZ"
+      },
+      {
+        "name": "id",
+        "isNullable": false,
+        "hasDefault": true,
+        "typeId": 20,
+        "typeName": "BIGINT"
+      },
+      {
+        "name": "ignored_error",
+        "isNullable": true,
+        "hasDefault": false,
+        "typeId": 25,
+        "typeName": "TEXT"
+      },
+      {
+        "name": "index",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "name",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 25,
+        "typeName": "TEXT"
+      },
+      {
+        "name": "obsolete",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 16,
+        "typeName": "BOOL"
+      },
+      {
+        "name": "script",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 25,
+        "typeName": "TEXT"
+      }
+    ]
+  },
+  {
+    "name": "atdatabases_migrations_version",
+    "columns": [
+      {
+        "name": "id",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "version",
+        "isNullable": true,
+        "hasDefault": false,
+        "typeId": 25,
+        "typeName": "TEXT"
+      }
+    ]
+  },
+  {
+    "name": "blockfile",
+    "columns": [
+      {
+        "name": "content",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 25,
+        "typeName": "TEXT"
+      },
+      {
+        "name": "entry_limit",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "i",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "i_instance",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "i_user",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      }
+    ]
+  },
+  {
+    "name": "blocklist",
+    "columns": [
+      {
+        "name": "address",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 1042,
+        "typeName": "BPCHAR"
+      },
+      {
+        "name": "entry_limit",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "i",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "i_instance",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "i_user",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      }
+    ]
+  },
+  {
+    "name": "instance",
+    "columns": [
+      {
+        "name": "alias",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 1042,
+        "typeName": "BPCHAR"
+      },
+      {
+        "name": "i",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "i_user",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "name",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 1042,
+        "typeName": "BPCHAR"
+      },
+      {
+        "name": "query_limit",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      }
+    ]
+  },
+  {
+    "name": "user",
+    "columns": [
+      {
+        "name": "created_at",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 1114,
+        "typeName": "TIMESTAMP"
+      },
+      {
+        "name": "email",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 1042,
+        "typeName": "BPCHAR"
+      },
+      {
+        "name": "email_token",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "i",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "instance_limit",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "password",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 1042,
+        "typeName": "BPCHAR"
+      }
+    ]
+  }
+]

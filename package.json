@@ -1,0 +1,21 @@
+{
+  "name": "progressive",
+  "private": true,
+  "author": "HoJeong Go <seia@outlook.kr>",
+  "scripts": {
+    "tsc": "tsc"
+  },
+  "devDependencies": {
+    "@sinclair/typebox": "^0.24.28",
+    "@swc/cli": "^0.1.57",
+    "@swc/core": "^1.2.244",
+    "@types/node": "^18.7.13",
+    "@typescript-eslint/eslint-plugin": "^5.35.1",
+    "@typescript-eslint/parser": "^5.35.1",
+    "eslint": ">=8.14.0",
+    "eslint-config-xo": "^0.42.0",
+    "ts-node": "^10.9.1",
+    "tslib": "^2.4.0",
+    "typescript": "^4.8.2"
+  }
+}
