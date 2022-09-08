@@ -3,6 +3,7 @@ import {Type} from '@sinclair/typebox';
 import * as argon2 from 'argon2';
 import type {FastifyPluginCallback} from 'fastify';
 import * as database from '../models/database/provider.js';
+import User from '../models/database/schema/user.js';
 import {Error} from '../models/reply/schema.js';
 
 export const router: FastifyPluginCallback = (fastify, opts, done) => {
@@ -30,6 +31,10 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 				200: Type.Object({
 					code: Type.Literal('signup_requested'),
 				}),
+				500: Type.Object({
+					code: Type.Literal('signup_failed'),
+					message: Error,
+				}),
 			},
 		},
 		async handler(request, reply) {
@@ -49,7 +54,7 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 				return {
 					code: 'signup_refused' as const,
 					message: {
-						readable: 'We are doing our best to support your email address. Sorry for this time.',
+						readable: 'We are doing our best to support your email address. But we are sorry for this time.',
 					},
 				};
 			}
@@ -76,14 +81,29 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 				type: argon2.argon2id,
 			});
 
-			await database.user(database.db).insert({
-				i: -1,
+			let result: (void | [User]) | false = await database.user(database.db).insert({
 				email,
 				email_token: -1, // Disable email verification for a while
 				password: hash,
 				instance_limit: 1,
 				created_at: new Date(),
-			});
+			})
+				.catch(error => {
+					console.error(error);
+
+					result = false;
+				});
+
+			if (!result) {
+				reply.code(500);
+
+				return {
+					code: 'signup_failed' as const,
+					message: {
+						readable: 'We failed to create your account at this time. Please, contact us if you experience again after retrying with another password.',
+					},
+				};
+			}
 
 			return {
 				code: 'signup_requested' as const,

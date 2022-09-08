@@ -30,5 +30,17 @@ export const factory = async () => {
 	fastify.register(fastifyCookie);
 	fastify.register(router, {prefix: '/s'});
 
+	fastify.setErrorHandler((error, request, reply) => {
+		console.error(error);
+
+		reply.code(500);
+		reply.send({
+			code: 'generic_failure',
+			message: {
+				readable: 'We failed to process your request. Please, contact us if you experience again after retrying.',
+			},
+		});
+	});
+
 	return fastify;
 };

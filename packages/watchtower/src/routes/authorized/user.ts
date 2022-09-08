@@ -20,15 +20,16 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 			}),
 			response: {
 				403: Type.Object({
-					code: Type.Literal('deletion_failed'),
+					code: Type.Literal('verification_failed'),
 					message: Error,
 				}),
 				200: Type.Object({
-					code: Type.Literal('deletion_success'),
+					code: Type.Literal('user_deleted'),
 				}),
 			},
 		},
 		async handler(request, reply) {
+			const {i} = request.user;
 			const {
 				email,
 				password,
@@ -46,21 +47,25 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 				reply.code(403);
 
 				return {
-					code: 'deletion_failed' as const,
+					code: 'verification_failed' as const,
 					message: {
 						readable: 'We were unable to verify who you are.',
 					},
 				};
 			}
 
-			// Delete user
-			await database.user(database.db).delete({email});
+			// Delete user and their components
+			await database.db.tx(async t => {
+				await database.instance(t).delete({i_user: i});
+				await database.blocklist(t).delete({i_user: i});
+				await database.user(t).delete({i});
+			});
 
 			// Delete session
 			await reply.clearCookie('a');
 
 			return {
-				code: 'deletion_success' as const,
+				code: 'user_deleted' as const,
 			};
 		},
 	});
