@@ -22,7 +22,6 @@ export const {
 	user,
 	instance,
 	blocklist,
-	blockfile,
 } = tables<Schema>({
 	databaseSchema: JSON.parse(
 		fs.readFileSync(

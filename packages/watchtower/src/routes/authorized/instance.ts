@@ -30,6 +30,51 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 		},
 	});
 	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+		method: 'GET',
+		url: '/:instanceId',
+		schema: {
+			params: Type.Object({
+				instanceId: Type.Number({
+					minimum: 1,
+				}),
+			}),
+			response: {
+				200: Type.Object({
+					code: Type.Literal('instance_queried'),
+				}),
+				403: Type.Object({
+					code: Type.Literal('invalid_instance'),
+					message: Error,
+				}),
+			},
+		},
+		async handler(request, reply) {
+			const {i} = request.user;
+			const {instanceId} = request.params;
+
+			// Check for existing instance
+			const instance = await database.instance(database.db)
+				.findOne({i: instanceId, i_user: i});
+
+			if (!instance) {
+				reply.code(403);
+				reply.clearCookie('a');
+
+				return {
+					code: 'invalid_instance' as const,
+					message: {
+						readable: 'Sorry, your session has been terminated due to information mismatch and to protect your account.',
+					},
+				};
+			}
+
+			return {
+				code: 'instance_queried' as const,
+				instance,
+			};
+		},
+	});
+	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
 		method: 'PUT',
 		url: '/',
 		schema: {
@@ -269,8 +314,12 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 			}
 
 			// Delete
-			await database.instance(database.db)
-				.delete({i: instanceId});
+			await database.db.tx(async t => {
+				await database.instance(t)
+					.delete({i: instanceId});
+				await database.blocklist(t)
+					.delete({i_instance: instanceId});
+			});
 
 			return {
 				code: 'instance_deleted' as const,
