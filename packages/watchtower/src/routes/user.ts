@@ -3,7 +3,6 @@ import {Type} from '@sinclair/typebox';
 import * as argon2 from 'argon2';
 import type {FastifyPluginCallback} from 'fastify';
 import * as database from '../models/database/provider.js';
-import User from '../models/database/schema/user.js';
 import {Error} from '../models/reply/schema.js';
 
 export const router: FastifyPluginCallback = (fastify, opts, done) => {
@@ -77,11 +76,9 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 
 			// Create user
 			// const token = Math.floor(Math.random() * Date.now() * 16);
-			const hash = await argon2.hash(password, {
-				type: argon2.argon2id,
-			});
+			const hash = await argon2.hash(password);
 
-			let result: (void | [User]) | false = await database.user(database.db).insert({
+			const result = await database.user(database.db).insert({
 				email,
 				email_token: -1, // Disable email verification for a while
 				password: hash,
@@ -90,9 +87,7 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 			})
 				.catch(error => {
 					console.error(error);
-
-					result = false;
-				});
+				}) ?? false;
 
 			if (!result) {
 				reply.code(500);
@@ -151,7 +146,7 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 
 			if (
 				!one
-				|| !await argon2.verify(one.password, password, {type: argon2.argon2id})
+				|| !await argon2.verify(one.password, password)
 			) {
 				reply.code(403);
 

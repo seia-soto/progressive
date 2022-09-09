@@ -1,19 +1,29 @@
 {
   "name": "watchtower",
   "version": "1.0.0",
-  "main": "src/bin.ts",
+  "main": "out/bin.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "tsc": "tsc",
+    "ava": "ava",
     "database:test": "pg-test",
     "database:apply": "pg-migrations apply --directory src/models/database/migrates",
     "database:sync": "pg-schema --directory src/models/database/schema",
     "build": "swc src -d out --config-file ../../.swcrc",
-    "start": "node --loader ts-node/esm --inspect src/bin.ts"
+    "start": "node --loader ts-node/esm src/bin.ts",
+    "test": ". scripts/test.sh"
   },
   "keywords": [],
   "author": "HoJeong Go <seia@outlook.kr>",
   "private": true,
+  "ava": {
+    "extensions": {
+      "ts": "module"
+    },
+    "nodeArguments": [
+      "--loader=ts-node/esm"
+    ]
+  },
   "dependencies": {
     "@databases/pg": "^5.4.1",
     "@databases/pg-schema-cli": "^4.3.0",
@@ -30,6 +40,7 @@
   },
   "devDependencies": {
     "@databases/pg-migrations": "^5.0.1",
-    "@databases/pg-test": "^3.1.2"
+    "@databases/pg-test": "^3.1.2",
+    "ava": "^4.3.3"
   }
 }
