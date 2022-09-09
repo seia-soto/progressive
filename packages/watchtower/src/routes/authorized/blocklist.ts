@@ -2,7 +2,7 @@ import {TypeBoxTypeProvider} from '@fastify/type-provider-typebox';
 import {Type} from '@sinclair/typebox';
 import type {FastifyPluginCallback} from 'fastify';
 import * as database from '../../models/database/provider.js';
-import * as blocklist from '../../models/blocklist/file.js';
+import * as blocklist from '../../models/filter/user.js';
 import {Error} from '../../models/reply/schema.js';
 
 export const router: FastifyPluginCallback = (fastify, opts, done) => {
@@ -160,6 +160,9 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 				};
 			}
 
+			// Create
+			const now = new Date();
+
 			await database.blocklist(database.db)
 				.insert({
 					i_user: i,
@@ -167,6 +170,8 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 					name,
 					address,
 					entry_limit: 50 * 1000,
+					created_at: now,
+					updated_at: now,
 				});
 
 			return {
@@ -228,7 +233,7 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 	// File
 	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
 		method: 'GET',
-		url: '/:instanceId/f',
+		url: '/user/:instanceId',
 		schema: {
 			params: Type.Object({
 				instanceId: Type.Number({
@@ -295,7 +300,7 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 	});
 	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
 		method: 'PATCH',
-		url: '/:instanceId/f',
+		url: '/user/:instanceId',
 		schema: {
 			params: Type.Object({
 				instanceId: Type.Number({

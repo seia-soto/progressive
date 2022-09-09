@@ -17,5 +17,6 @@ module.exports = {
 	rules: {
 		'new-cap': 0,
 		camelcase: 0,
+		'no-await-in-loop': 0,
 	},
 };

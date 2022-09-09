@@ -1,9 +1,9 @@
 import {TypeBoxTypeProvider} from '@fastify/type-provider-typebox';
 import {Type} from '@sinclair/typebox';
 import type {FastifyPluginCallback} from 'fastify';
-import {defaultPath} from '../../models/blocklist/file.js';
 import * as database from '../../models/database/provider.js';
 import Instance from '../../models/database/schema/instance.js';
+import {reload} from '../../models/filter/loader.js';
 import {Error} from '../../models/reply/schema.js';
 
 export const router: FastifyPluginCallback = (fastify, opts, done) => {
@@ -136,22 +136,29 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 			}
 
 			// Create
+			const now = new Date();
+
 			await database.db.tx(async t => {
 				const [instance] = await database.instance(t)
 					.insert({
 						i_user: i,
+						status: 0,
 						alias,
 						upstream: 'dot://dns.seia.io;dot://secondary.dns.seia.io',
 						query_limit: 100 * 1000,
 						filter_limit: 0,
+						created_at: now,
+						updated_at: now,
 					});
 				await database.blocklist(t)
 					.insert({
 						i_user: i,
 						i_instance: instance.i,
 						name: 'user',
-						address: defaultPath,
+						address: 'file://aa-user',
 						entry_limit: 2500,
+						created_at: now,
+						updated_at: now,
 					});
 			});
 
@@ -324,6 +331,53 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 
 			return {
 				code: 'instance_deleted' as const,
+			};
+		},
+	});
+
+	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+		method: 'GET',
+		url: '/reload/:instanceId',
+		schema: {
+			params: Type.Object({
+				instanceId: Type.Number({
+					minimum: 1,
+				}),
+			}),
+			response: {
+				200: Type.Object({
+					code: Type.Literal('reload_requested'),
+				}),
+				403: Type.Object({
+					code: Type.Literal('invalid_instance'),
+					message: Error,
+				}),
+			},
+		},
+		async handler(request, reply) {
+			const {instanceId} = request.params;
+			const {i} = request.user;
+
+			// Check for existing instance
+			const instance = await database.instance(database.db)
+				.findOne({i: instanceId, i_user: i});
+
+			if (!instance) {
+				reply.code(403);
+				reply.clearCookie('a');
+
+				return {
+					code: 'invalid_instance' as const,
+					message: {
+						readable: 'Sorry, your session has been terminated due to information mismatch and to protect your account.',
+					},
+				};
+			}
+
+			reload(instanceId);
+
+			return {
+				code: 'reload_requested' as const,
 			};
 		},
 	});

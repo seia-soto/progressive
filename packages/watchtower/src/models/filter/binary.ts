@@ -1,5 +1,5 @@
 import {Node} from 'vertical-radix';
-import {parse} from './rule';
+import {parse} from './rule.js';
 
 export const build = async (list: string) => {
 	const filter = {

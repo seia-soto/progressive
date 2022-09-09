@@ -1,8 +1,8 @@
-import fs from 'fs';
 import createConnectionPool, {sql} from '@databases/pg';
 import tables from '@databases/pg-typed';
+import fs from 'node:fs';
+import path from 'node:path';
 import type Schema from './schema/index.js';
-import path from 'path';
 
 export {sql};
 
@@ -13,7 +13,6 @@ export const dispose = async () => {
 
 	await db.dispose()
 		.catch(error => {
-			console.error('Failed to dispose database!');
 			console.error(error);
 		});
 };

@@ -83,6 +83,13 @@
         "typeName": "BPCHAR"
       },
       {
+        "name": "created_at",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 1114,
+        "typeName": "TIMESTAMP"
+      },
+      {
         "name": "entry_limit",
         "isNullable": false,
         "hasDefault": false,
@@ -116,6 +123,13 @@
         "hasDefault": false,
         "typeId": 1042,
         "typeName": "BPCHAR"
+      },
+      {
+        "name": "updated_at",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 1114,
+        "typeName": "TIMESTAMP"
       }
     ]
   },
@@ -128,6 +142,13 @@
         "hasDefault": false,
         "typeId": 1042,
         "typeName": "BPCHAR"
+      },
+      {
+        "name": "created_at",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 1114,
+        "typeName": "TIMESTAMP"
       },
       {
         "name": "filter_limit",
@@ -156,6 +177,20 @@
         "hasDefault": false,
         "typeId": 23,
         "typeName": "INTEGER"
+      },
+      {
+        "name": "status",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "updated_at",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 1114,
+        "typeName": "TIMESTAMP"
       },
       {
         "name": "upstream",
