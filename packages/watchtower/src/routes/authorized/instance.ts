@@ -124,7 +124,7 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 			const pressure = await database.instance(database.db)
 				.count({i_user: i});
 
-			if (user.instance_limit >= pressure) {
+			if (user.instance_limit <= pressure) {
 				reply.code(402);
 
 				return {
@@ -143,12 +143,13 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 						alias,
 						upstream: 'dot://dns.seia.io;dot://secondary.dns.seia.io',
 						query_limit: 100 * 1000,
-						manual_limit: 0,
+						filter_limit: 0,
 					});
 				await database.blocklist(t)
 					.insert({
 						i_user: i,
 						i_instance: instance.i,
+						name: 'user',
 						address: defaultPath,
 						entry_limit: 2500,
 					});

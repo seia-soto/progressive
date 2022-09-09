@@ -16,7 +16,7 @@ CREATE TABLE "instance" (
 	alias								CHAR(24)						NOT NULL,
 	upstream						CHAR(1024)					NOT NULL,
 	query_limit					INT									NOT NULL,
-	manual_limit				INT									NOT NULL,
+	filter_limit				INT									NOT NULL,
 
 	UNIQUE(i),
 
@@ -27,6 +27,7 @@ CREATE TABLE "blocklist" (
 	i										SERIAL 	PRIMARY KEY NOT NULL,
 	i_user							SERIAL							NOT NULL,
 	i_instance					SERIAL							NOT NULL,
+	name								CHAR(24)						NOT NULL,
 	address							CHAR(2048)					NOT NULL,
 	entry_limit					INT									NOT NULL,
 

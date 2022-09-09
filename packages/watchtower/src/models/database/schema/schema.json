@@ -109,6 +109,13 @@
         "hasDefault": true,
         "typeId": 23,
         "typeName": "INTEGER"
+      },
+      {
+        "name": "name",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 1042,
+        "typeName": "BPCHAR"
       }
     ]
   },
@@ -123,6 +130,13 @@
         "typeName": "BPCHAR"
       },
       {
+        "name": "filter_limit",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
         "name": "i",
         "isNullable": false,
         "hasDefault": true,
@@ -133,13 +147,6 @@
         "name": "i_user",
         "isNullable": false,
         "hasDefault": true,
-        "typeId": 23,
-        "typeName": "INTEGER"
-      },
-      {
-        "name": "manual_limit",
-        "isNullable": false,
-        "hasDefault": false,
         "typeId": 23,
         "typeName": "INTEGER"
       },
