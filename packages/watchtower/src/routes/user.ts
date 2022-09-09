@@ -201,8 +201,8 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 
 			if (
 				!one
-				|| one.email_token > 0
-				|| !await argon2.verify(one.password, password, {type: argon2.argon2id})
+				|| one.email_token >= 0
+				|| !await argon2.verify(one.password, password)
 			) {
 				reply.code(403);
 
@@ -218,8 +218,8 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 			const jwt = await reply.jwtSign({
 				i: one.i,
 			});
-			await reply.setCookie('a', jwt, {
-				domain: 'progressive.seia.io',
+
+			reply.setCookie('a', jwt, {
 				path: '/',
 				secure: true,
 				httpOnly: true,

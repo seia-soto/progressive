@@ -11,7 +11,14 @@ interface IExecutionContext {
 		password: string,
 	}
 	cookies: {
-		a: string
+		a: {
+			name: string,
+			value: string,
+			path: string,
+			httpOnly: boolean,
+			secure: boolean,
+			sameSite: string,
+		}
 	}
 }
 
@@ -30,7 +37,14 @@ test.before(async t => {
 		password: 'this_is_testing_password',
 	};
 	t.context.cookies = {
-		a: '',
+		a: {
+			name: 'a',
+			value: '',
+			path: '/',
+			httpOnly: false,
+			secure: false,
+			sameSite: 'Strict',
+		},
 	};
 });
 
@@ -38,13 +52,27 @@ test.after(async t => {
 	await t.context.server.close();
 });
 
-test('create user: put /s/user', async t => {
-	const response = await t.context.server.inject({
+test('[public] user: /s/user', async t => {
+	const rSignUp = await t.context.server.inject({
 		method: 'put',
 		url: '/s/user',
 		payload: t.context.user,
 	});
-	const json = response.json<IResponseJson>();
+	const jSignUp = rSignUp.json<IResponseJson>();
 
-	t.is(json.code, 'signup_requested');
+	t.is(jSignUp.code, 'signup_requested');
+
+	const rSignIn = await t.context.server.inject({
+		method: 'post',
+		url: '/s/user',
+		payload: t.context.user,
+	});
+	const jSignIn = rSignIn.json<IResponseJson>();
+
+	const authorization = rSignIn.cookies[0] as IExecutionContext['cookies']['a'];
+
+	t.is(jSignIn.code, 'sign_success');
+	t.truthy(authorization);
+
+	t.context.cookies.a = authorization;
 });

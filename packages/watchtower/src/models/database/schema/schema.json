@@ -79,8 +79,8 @@
         "name": "address",
         "isNullable": false,
         "hasDefault": false,
-        "typeId": 1042,
-        "typeName": "BPCHAR"
+        "typeId": 25,
+        "typeName": "TEXT"
       },
       {
         "name": "created_at",
@@ -121,8 +121,8 @@
         "name": "name",
         "isNullable": false,
         "hasDefault": false,
-        "typeId": 1042,
-        "typeName": "BPCHAR"
+        "typeId": 25,
+        "typeName": "TEXT"
       },
       {
         "name": "updated_at",
@@ -140,8 +140,8 @@
         "name": "alias",
         "isNullable": false,
         "hasDefault": false,
-        "typeId": 1042,
-        "typeName": "BPCHAR"
+        "typeId": 25,
+        "typeName": "TEXT"
       },
       {
         "name": "created_at",
@@ -196,8 +196,8 @@
         "name": "upstream",
         "isNullable": false,
         "hasDefault": false,
-        "typeId": 1042,
-        "typeName": "BPCHAR"
+        "typeId": 25,
+        "typeName": "TEXT"
       }
     ]
   },
@@ -215,8 +215,8 @@
         "name": "email",
         "isNullable": false,
         "hasDefault": false,
-        "typeId": 1042,
-        "typeName": "BPCHAR"
+        "typeId": 25,
+        "typeName": "TEXT"
       },
       {
         "name": "email_token",
@@ -243,8 +243,8 @@
         "name": "password",
         "isNullable": false,
         "hasDefault": false,
-        "typeId": 1042,
-        "typeName": "BPCHAR"
+        "typeId": 25,
+        "typeName": "TEXT"
       }
     ]
   }
