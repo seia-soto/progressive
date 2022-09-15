@@ -1,12 +1,11 @@
-import {TypeBoxTypeProvider} from '@fastify/type-provider-typebox';
 import {Type} from '@sinclair/typebox';
 import * as argon2 from 'argon2';
-import type {FastifyPluginCallback} from 'fastify';
 import * as database from '../models/database/provider.js';
 import {Error} from '../models/reply/schema.js';
+import {TFastifyTypedPluginCallback} from '../typeRef.js';
 
-export const router: FastifyPluginCallback = (fastify, opts, done) => {
-	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
+	fastify.route({
 		method: 'PUT',
 		url: '/',
 		schema: {
@@ -106,7 +105,7 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 		},
 	});
 
-	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+	fastify.route({
 		method: 'PUT',
 		url: '/ack',
 		schema: {
@@ -166,7 +165,7 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 		},
 	});
 
-	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+	fastify.route({
 		method: 'POST',
 		url: '/',
 		schema: {

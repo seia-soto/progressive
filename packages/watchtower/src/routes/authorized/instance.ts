@@ -1,13 +1,12 @@
-import {TypeBoxTypeProvider} from '@fastify/type-provider-typebox';
 import {Type} from '@sinclair/typebox';
-import type {FastifyPluginCallback} from 'fastify';
 import * as database from '../../models/database/provider.js';
 import Instance from '../../models/database/schema/instance.js';
 import {reload} from '../../models/filter/loader.js';
 import {Error} from '../../models/reply/schema.js';
+import {TFastifyTypedPluginCallback} from '../../typeRef.js';
 
-export const router: FastifyPluginCallback = (fastify, opts, done) => {
-	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
+	fastify.route({
 		method: 'GET',
 		url: '/',
 		schema: {
@@ -29,7 +28,7 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 			};
 		},
 	});
-	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+	fastify.route({
 		method: 'GET',
 		url: '/:instanceId',
 		schema: {
@@ -74,7 +73,7 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 			};
 		},
 	});
-	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+	fastify.route({
 		method: 'PUT',
 		url: '/',
 		schema: {
@@ -167,7 +166,7 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 			};
 		},
 	});
-	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+	fastify.route({
 		method: 'PATCH',
 		url: '/:instanceId',
 		schema: {
@@ -282,7 +281,7 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 			};
 		},
 	});
-	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+	fastify.route({
 		method: 'DELETE',
 		url: '/:instanceId',
 		schema: {
@@ -335,7 +334,7 @@ export const router: FastifyPluginCallback = (fastify, opts, done) => {
 		},
 	});
 
-	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+	fastify.route({
 		method: 'GET',
 		url: '/reload/:instanceId',
 		schema: {
