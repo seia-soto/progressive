@@ -1,0 +1,23 @@
+name: Test watchtower
+
+on:
+  push:
+    paths:
+      - packages/watchtower
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install pnpm
+        run: npm i -g pnpm
+      - name: Install docker
+        run: curl https://get.docker.com | bash
+      - name: Install dependencies
+        run: cd packages/watchtower && pnpm i
+      - name: Run test
+        run: pnpm test
