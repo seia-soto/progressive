@@ -3,7 +3,7 @@ name: Test watchtower
 on:
   push:
     paths:
-      - packages/watchtower
+      - packages/watchtower/**
 
 jobs:
   test:
