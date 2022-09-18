@@ -1,4 +1,5 @@
-import got, {Response, Progress} from 'got';
+import got, {Progress} from 'got';
+import derive from '../../utils/derive';
 
 export const downloadLimit = 2 * 1000 * 1000; // 2MB
 
@@ -41,13 +42,8 @@ export const instance = got.extend({
 	},
 });
 
-export type TGotResponseFailable = (string | (void | Response<string>)) | false
-
 export const load = async (url: string) => {
-	let head: TGotResponseFailable = await instance.head(url)
-		.catch(() => {
-			head = false;
-		});
+	const [, head] = await derive(instance.head(url));
 
 	if (
 		head
@@ -56,10 +52,7 @@ export const load = async (url: string) => {
 		return '';
 	}
 
-	let response: TGotResponseFailable = await instance.get(url).text()
-		.catch(() => {
-			response = false;
-		});
+	const [, response] = await derive(instance.get(url).text());
 
-	return response;
+	return response || '';
 };

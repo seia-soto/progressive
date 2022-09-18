@@ -1,12 +1,12 @@
-import {TypeBoxTypeProvider} from '@fastify/type-provider-typebox';
 import {Type} from '@sinclair/typebox';
 import * as database from '../../models/database/provider.js';
 import * as blocklist from '../../models/filter/user.js';
 import {Error} from '../../models/reply/schema.js';
 import {TFastifyTypedPluginCallback} from '../../typeRef.js';
+import derive from '../../utils/derive.js';
 
 export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
-	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+	fastify.route({
 		method: 'GET',
 		url: '/:instanceId',
 		schema: {
@@ -55,7 +55,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			};
 		},
 	});
-	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+	fastify.route({
 		method: 'PUT',
 		url: '/:instanceId',
 		schema: {
@@ -179,7 +179,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			};
 		},
 	});
-	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+	fastify.route({
 		method: 'PUT',
 		url: '/:instanceId/:blocklistId',
 		schema: {
@@ -231,7 +231,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 	});
 
 	// File
-	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+	fastify.route({
 		method: 'GET',
 		url: '/user/:instanceId',
 		schema: {
@@ -275,14 +275,9 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			}
 
 			// Read
-			let result: boolean | string | void = await blocklist.read(instanceId)
-				.catch(error => {
-					console.error(error);
+			const [error, list] = await derive(blocklist.read(instanceId));
 
-					result = false;
-				});
-
-			if (!result) {
+			if (error) {
 				reply.code(500);
 
 				return {
@@ -295,10 +290,11 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 
 			return {
 				code: 'blocklist_queried' as const,
+				list,
 			};
 		},
 	});
-	fastify.withTypeProvider<TypeBoxTypeProvider>().route({
+	fastify.route({
 		method: 'PATCH',
 		url: '/user/:instanceId',
 		schema: {
@@ -348,14 +344,9 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			}
 
 			// Write
-			let result: boolean | void = await blocklist.save(instanceId, f)
-				.catch(error => {
-					console.error(error);
+			const [error] = await derive(blocklist.save(instanceId, f));
 
-					result = false;
-				});
-
-			if (!result) {
+			if (error) {
 				reply.code(500);
 
 				return {

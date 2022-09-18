@@ -31,7 +31,17 @@ export const factory = async () => {
 	fastify.register(router, {prefix: '/s'});
 
 	fastify.setErrorHandler((error, request, reply) => {
-		console.error(error);
+		console.error(
+			Date.now(),
+			request.method,
+			request.url,
+			request.headers['user-agent'] ?? 'bot',
+			request.ip,
+			'e::', // Token to search in stdout
+			error.message ?? error.name ?? error.code,
+			'\n',
+			error,
+		);
 
 		reply.code(500);
 		reply.send({
