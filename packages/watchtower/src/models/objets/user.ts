@@ -109,7 +109,7 @@ export const update = async (i: number, partial: TPartialUser) => {
 		return [EDatabaseError.QueryFailure] as const;
 	}
 
-	return [EUserUpdateResult.Updated, query.email_token];
+	return [EUserUpdateResult.Updated, query.email_token] as const;
 };
 
 /* eslint-disable no-unused-vars */
