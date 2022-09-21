@@ -19,7 +19,7 @@ export const exist = async (email: string) => {
 	const [databaseQueryFailure, exists] = await derive(expose().count({email}));
 
 	if (databaseQueryFailure) {
-		return [EDatabaseError.QueryFailure] as const;
+		return [EDatabaseError.QueryFailure, databaseQueryFailure] as const;
 	}
 
 	return [EUserExistResult[abstract((exists as 0 | 1) + 10)], exists] as const;
@@ -52,7 +52,7 @@ export const create = async (email: string, password: string, options: IUserCrea
 	const [passwordHashFailure, passwordHash] = await derive(hash(password, {type: argon2id}));
 
 	if (passwordHashFailure) {
-		return [EUserCreateResult.PasswordHashFailure] as const;
+		return [EUserCreateResult.PasswordHashFailure, passwordHashFailure] as const;
 	}
 
 	// Create user
@@ -64,7 +64,7 @@ export const create = async (email: string, password: string, options: IUserCrea
 	}));
 
 	if (databaseQueryFailure) {
-		return [EDatabaseError.QueryFailure] as const;
+		return [EDatabaseError.QueryFailure, databaseQueryFailure] as const;
 	}
 
 	return [EUserCreateResult.Created, users[0].i] as const;
@@ -92,7 +92,7 @@ export const update = async (i: number, partial: TPartialUser) => {
 		const [passwordHashFailure, hashed] = await derive(hash(partial.password, {type: argon2id}));
 
 		if (passwordHashFailure) {
-			return [EUserUpdateResult.PasswordHashFailure] as const;
+			return [EUserUpdateResult.PasswordHashFailure, passwordHashFailure] as const;
 		}
 
 		query.password = hashed;
@@ -106,7 +106,7 @@ export const update = async (i: number, partial: TPartialUser) => {
 	const [databaseQueryFailure] = await derive(expose().update({i}, query));
 
 	if (databaseQueryFailure) {
-		return [EDatabaseError.QueryFailure] as const;
+		return [EDatabaseError.QueryFailure, databaseQueryFailure] as const;
 	}
 
 	return [EUserUpdateResult.Updated, query.email_token] as const;
@@ -122,7 +122,7 @@ export const remove = async (i: number) => {
 	const [databaseQueryFailure] = await derive(expose().delete({i}));
 
 	if (databaseQueryFailure) {
-		return [EDatabaseError.QueryFailure] as const;
+		return [EDatabaseError.QueryFailure, databaseQueryFailure] as const;
 	}
 
 	return [EUserRemoveResult.Deleted, i] as const;
@@ -140,7 +140,7 @@ export const authenticateByPassword = async (email: string, password: string) =>
 	const [databaseQueryFailure, user] = await derive(expose().find({email}).select('password').one());
 
 	if (databaseQueryFailure) {
-		return [EDatabaseError.QueryFailure] as const;
+		return [EDatabaseError.QueryFailure, databaseQueryFailure] as const;
 	}
 
 	if (!user) {
@@ -150,7 +150,7 @@ export const authenticateByPassword = async (email: string, password: string) =>
 	const [passwordHashFailure, isValid] = await derive(verify(user.password, password, {type: argon2id}));
 
 	if (passwordHashFailure) {
-		return [EUserAuthenticateResult.PasswordHashFailure] as const;
+		return [EUserAuthenticateResult.PasswordHashFailure, passwordHashFailure] as const;
 	}
 
 	if (!isValid) {

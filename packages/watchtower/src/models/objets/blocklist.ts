@@ -32,7 +32,7 @@ export const create = async (user: User['i'], instance: Instance['i'], name: str
 	}));
 
 	if (databaseQueryFailure) {
-		return [EDatabaseError.QueryFailure] as const;
+		return [EDatabaseError.QueryFailure, databaseQueryFailure] as const;
 	}
 
 	return [EBlocklistCreateResult.Created, blocklists[0].i] as const;
@@ -70,7 +70,7 @@ export const update = async (i: number, partial: TPartial) => {
 	const [databaseQueryFailure] = await derive(expose().update({i}, query));
 
 	if (databaseQueryFailure) {
-		return [EDatabaseError.QueryFailure] as const;
+		return [EDatabaseError.QueryFailure, databaseQueryFailure] as const;
 	}
 
 	return [EBlocklistUpdateResult.Updated] as const;
@@ -86,7 +86,7 @@ export const remove = async (i: number) => {
 	const [databaseQueryFailure] = await derive(expose().delete({i}));
 
 	if (databaseQueryFailure) {
-		return [EDatabaseError.QueryFailure] as const;
+		return [EDatabaseError.QueryFailure, databaseQueryFailure] as const;
 	}
 
 	return [EBlocklistRemoveResult.Removed] as const;

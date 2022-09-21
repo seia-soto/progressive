@@ -19,7 +19,7 @@ export const exist = async (i: number) => {
 	const [databaseQueryFailure, exists] = await derive(expose().count({i}));
 
 	if (databaseQueryFailure) {
-		return [EDatabaseError.QueryFailure] as const;
+		return [EDatabaseError.QueryFailure, databaseQueryFailure] as const;
 	}
 
 	return [EInstanceExistResult[abstract((exists as 0 | 1) + 10)], exists] as const;
@@ -44,7 +44,7 @@ export const create = async (user: User['i'], alias: string, upstream: string = 
 	}));
 
 	if (databaseQueryFailure) {
-		return [EDatabaseError.QueryFailure] as const;
+		return [EDatabaseError.QueryFailure, databaseQueryFailure] as const;
 	}
 
 	return [EInstanceCreateResult.Created, instances[0].i] as const;
@@ -109,7 +109,7 @@ export const update = async (i: number, partial: TPartial) => {
 	const [databaseQueryFailure] = await derive(expose().update({i}, query));
 
 	if (databaseQueryFailure) {
-		return [EDatabaseError.QueryFailure] as const;
+		return [EDatabaseError.QueryFailure, databaseQueryFailure] as const;
 	}
 
 	return [EInstanceUpdateResult.Updated] as const;
@@ -125,7 +125,7 @@ export const remove = async (i: number) => {
 	const [databaseQueryFailure] = await derive(expose().delete({i}));
 
 	if (databaseQueryFailure) {
-		return [EDatabaseError.QueryFailure] as const;
+		return [EDatabaseError.QueryFailure, databaseQueryFailure] as const;
 	}
 
 	return [EInstanceRemoveResult.Deleted] as const;
