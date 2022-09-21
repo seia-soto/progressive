@@ -37,9 +37,6 @@ export const factory = async () => {
 			request.url,
 			request.headers['user-agent'] ?? 'bot',
 			request.ip,
-			'e::', // Token to search in stdout
-			error.message ?? error.name ?? error.code,
-			'\n',
 			error,
 		);
 
