@@ -1,4 +1,4 @@
-const derive = async <TSome extends Promise<unknown>, TError extends Error>(one: TSome): Promise<readonly [false, Awaited<TSome>] | readonly [TError, false]> => {
+const derive = async <TSome, TError extends Error = Error>(one: TSome): Promise<readonly [false, Awaited<TSome>] | readonly [TError, false]> => {
 	try {
 		const result: Awaited<typeof one> = await one;
 

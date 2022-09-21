@@ -90,13 +90,6 @@
         "typeName": "TIMESTAMP"
       },
       {
-        "name": "entry_limit",
-        "isNullable": false,
-        "hasDefault": false,
-        "typeId": 23,
-        "typeName": "INTEGER"
-      },
-      {
         "name": "i",
         "isNullable": false,
         "hasDefault": true,
@@ -151,13 +144,6 @@
         "typeName": "TIMESTAMP"
       },
       {
-        "name": "filter_limit",
-        "isNullable": false,
-        "hasDefault": false,
-        "typeId": 23,
-        "typeName": "INTEGER"
-      },
-      {
         "name": "i",
         "isNullable": false,
         "hasDefault": true,
@@ -168,13 +154,6 @@
         "name": "i_user",
         "isNullable": false,
         "hasDefault": true,
-        "typeId": 23,
-        "typeName": "INTEGER"
-      },
-      {
-        "name": "query_limit",
-        "isNullable": false,
-        "hasDefault": false,
         "typeId": 23,
         "typeName": "INTEGER"
       },
@@ -229,13 +208,6 @@
         "name": "i",
         "isNullable": false,
         "hasDefault": true,
-        "typeId": 23,
-        "typeName": "INTEGER"
-      },
-      {
-        "name": "instance_limit",
-        "isNullable": false,
-        "hasDefault": false,
         "typeId": 23,
         "typeName": "INTEGER"
       },

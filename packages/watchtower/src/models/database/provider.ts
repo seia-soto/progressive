@@ -2,6 +2,7 @@ import createConnectionPool, {sql} from '@databases/pg';
 import tables from '@databases/pg-typed';
 import fs from 'node:fs';
 import path from 'node:path';
+import {createAbstractor, EAbstractionSpaces} from '../error/namespace.js';
 import type Schema from './schema/index.js';
 
 export {sql};
@@ -29,3 +30,11 @@ export const {
 		),
 	),
 });
+
+export const abstract = createAbstractor(EAbstractionSpaces.Database);
+
+export enum EDatabaseError {
+	/* eslint-disable no-unused-vars */
+	QueryFailure = abstract(1),
+	/* eslint-enable no-unused-vars */
+}

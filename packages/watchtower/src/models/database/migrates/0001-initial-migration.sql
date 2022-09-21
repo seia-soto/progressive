@@ -4,7 +4,6 @@ CREATE TABLE "user" (
 	email_token					INT									NOT NULL,
 	password						TEXT								NOT NULL,
 	created_at					TIMESTAMP						NOT NULL,
-	instance_limit			INT 								NOT NULL,
 
 	UNIQUE(email),
 	UNIQUE(i)
@@ -18,8 +17,6 @@ CREATE TABLE "instance" (
 	upstream						TEXT								NOT NULL,
 	created_at					TIMESTAMP						NOT NULL,
 	updated_at					TIMESTAMP						NOT NULL,
-	query_limit					INT									NOT NULL,
-	filter_limit				INT									NOT NULL,
 
 	UNIQUE(i),
 
@@ -34,7 +31,6 @@ CREATE TABLE "blocklist" (
 	address							TEXT								NOT NULL,
 	created_at					TIMESTAMP						NOT NULL,
 	updated_at					TIMESTAMP						NOT NULL,
-	entry_limit					INT									NOT NULL,
 
 	UNIQUE(i),
 
