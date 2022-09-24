@@ -1,7 +1,7 @@
-import {blocklist, db, instance} from './database/provider';
-import {Instance, User} from './database/schema';
-import {EInstanceError} from './error/keys';
-import {isDomain} from './validator/common';
+import {blocklist, db, instance} from './database/provider.js';
+import {Instance, User} from './database/schema/index.js';
+import {EInstanceError} from './error/keys.js';
+import {isDomain} from './validator/common.js';
 
 export const create = async (user: User['i']) => db.tx(async t => {
 	const time = new Date();

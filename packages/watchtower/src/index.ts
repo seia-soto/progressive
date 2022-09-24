@@ -2,6 +2,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyJwt from '@fastify/jwt';
 import {TypeBoxTypeProvider, TypeBoxValidatorCompiler} from '@fastify/type-provider-typebox';
 import Fastify from 'fastify';
+import {createBaseResponse} from './models/reply/common.js';
 import {router} from './routes/index.js';
 
 export const secret = process.env.SECRET ?? (Math.random() * Date.now() * 1024).toString(36).slice(0, 6);
@@ -39,13 +40,10 @@ export const factory = async () => {
 			error,
 		);
 
+		const response = createBaseResponse();
+
 		reply.code(500);
-		reply.send({
-			code: 'generic_failure',
-			message: {
-				readable: 'We failed to process your request. Please, contact us if you experience again after retrying.',
-			},
-		});
+		reply.send(response);
 	});
 
 	return fastify;

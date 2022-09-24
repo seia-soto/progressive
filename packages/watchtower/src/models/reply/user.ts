@@ -1,5 +1,5 @@
 import {Type} from '@sinclair/typebox';
-import {RBaseResponse} from './common';
+import {RBaseResponse} from './common.js';
 
 // Definition
 export const RTUserId = Type.Number({

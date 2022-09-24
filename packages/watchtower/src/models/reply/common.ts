@@ -1,4 +1,5 @@
 import {Static, TSchema, Type} from '@sinclair/typebox';
+import {EUnhandledError} from '../error/keys.js';
 
 export const RBaseResponse = Type.Object({
 	code: Type.String(),
@@ -14,10 +15,11 @@ export const RBaseResponse = Type.Object({
 
 export type TRBaseResponse = Static<typeof RBaseResponse>
 
-export const createBaseResponse = (code: string): TRBaseResponse => ({
+export const createBaseResponse = (code: string = EUnhandledError.unknown): TRBaseResponse => ({
 	code,
 	message: {
-		readable: 'Our manual to mitigate the error failed. Please, contact us for future solution.',
+		identifiable: 'Our manual to mitigate the error failed. Please, contact us for future solution.',
+		readable: 'Sorry, We failed to process your request. Please, contact us if you experience again after retrying.',
 	},
 });
 
