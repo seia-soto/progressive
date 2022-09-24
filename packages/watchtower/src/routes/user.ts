@@ -1,233 +1,79 @@
-import {Type} from '@sinclair/typebox';
-import * as argon2 from 'argon2';
-import * as database from '../models/database/provider.js';
-import {Error} from '../models/reply/schema.js';
+import {EUserError} from '../models/error/keys.js';
+import {user} from '../models/index.js';
+import {createBaseResponse} from '../models/reply/common.js';
+import {RUserCreateBody, RUserCreateResponse, RUserVerifyBody, RUserVerifyResponse} from '../models/reply/user.js';
 import {TFastifyTypedPluginCallback} from '../typeRef.js';
 
 export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 	fastify.route({
-		method: 'PUT',
 		url: '/',
-		schema: {
-			body: Type.Object({
-				email: Type.String({
-					format: 'email',
-				}),
-				password: Type.String({
-					minLength: 16,
-				}),
-			}),
-			response: {
-				403: Type.Object({
-					code: Type.Literal('signup_refused'),
-					message: Error,
-				}),
-				418: Type.Object({
-					code: Type.Literal('signup_conflicted'),
-					message: Error,
-				}),
-				200: Type.Object({
-					code: Type.Literal('signup_requested'),
-				}),
-				500: Type.Object({
-					code: Type.Literal('signup_failed'),
-					message: Error,
-				}),
-			},
-		},
-		async handler(request, reply) {
-			const {
-				email,
-				password,
-			} = request.body;
-
-			// Check for email address allowlist
-			const domainsAllowed = [
-				'seia.io',
-			];
-
-			if (domainsAllowed.indexOf(email.split('@')[1]) < 0) {
-				reply.code(403);
-
-				return {
-					code: 'signup_refused' as const,
-					message: {
-						readable: 'We are doing our best to support your email address. But we are sorry for this time.',
-					},
-				};
-			}
-
-			// Check for existing user
-			const one = await database.user(database.db).findOne({
-				email,
-			});
-
-			if (one) {
-				reply.code(418);
-
-				return {
-					code: 'signup_conflicted' as const,
-					message: {
-						readable: 'You already signed up with this email address.',
-					},
-				};
-			}
-
-			// Create user
-			// const token = Math.floor(Math.random() * Date.now() * 16);
-			const hash = await argon2.hash(password);
-
-			const result = await database.user(database.db).insert({
-				email,
-				email_token: -1, // Disable email verification for a while
-				password: hash,
-				instance_limit: 1,
-				created_at: new Date(),
-			})
-				.catch(error => {
-					console.error(error);
-				}) ?? false;
-
-			if (!result) {
-				reply.code(500);
-
-				return {
-					code: 'signup_failed' as const,
-					message: {
-						readable: 'We failed to create your account at this time. Please, contact us if you experience again after retrying with another password.',
-					},
-				};
-			}
-
-			return {
-				code: 'signup_requested' as const,
-			};
-		},
-	});
-
-	fastify.route({
-		method: 'PUT',
-		url: '/ack',
-		schema: {
-			body: Type.Object({
-				email: Type.String({
-					format: 'email',
-				}),
-				password: Type.String({
-					minLength: 16,
-				}),
-				token: Type.Number({
-					minimum: 0,
-				}),
-			}),
-			response: {
-				403: Type.Object({
-					code: Type.Literal('signup_failed'),
-					message: Error,
-				}),
-				200: Type.Object({
-					code: Type.Literal('signup_completed'),
-				}),
-			},
-		},
-		async handler(request, reply) {
-			const {
-				email,
-				password,
-				token,
-			} = request.body;
-
-			// Check for existing user
-			const one = await database.user(database.db).findOne({
-				email,
-				email_token: token,
-			});
-
-			if (
-				!one
-				|| !await argon2.verify(one.password, password)
-			) {
-				reply.code(403);
-
-				return {
-					code: 'signup_failed' as const,
-					message: {
-						readable: 'We failed to validate you are real.',
-					},
-				};
-			}
-
-			await database.user(database.db).update({email}, {email_token: -1});
-
-			return {
-				code: 'signup_completed' as const,
-			};
-		},
-	});
-
-	fastify.route({
 		method: 'POST',
-		url: '/',
 		schema: {
-			body: Type.Object({
-				email: Type.String({
-					format: 'email',
-				}),
-				password: Type.String({
-					minLength: 16,
-				}),
-			}),
+			body: RUserCreateBody,
 			response: {
-				403: Type.Object({
-					code: Type.Literal('sign_failed'),
-					message: Error,
-				}),
-				200: Type.Object({
-					code: Type.Literal('sign_success'),
-				}),
+				200: RUserCreateResponse,
+				400: RUserCreateResponse,
 			},
 		},
 		async handler(request, reply) {
-			const {
-				email,
-				password,
-			} = request.body;
+			const [code] = await user.create(request.body.email, request.body.password);
+			const response = createBaseResponse(code);
 
-			// Check for existing user
-			const one = await database.user(database.db).findOne({
-				email,
-			});
+			switch (code) {
+				case EUserError.userCreated: {
+					response.message.readable = 'Your account was created.';
 
-			if (
-				!one
-				|| one.email_token >= 0
-				|| !await argon2.verify(one.password, password)
-			) {
-				reply.code(403);
+					break;
+				}
 
-				return {
-					code: 'sign_failed' as const,
-					message: {
-						readable: 'Bruh!',
-					},
-				};
+				case EUserError.userEmailValidationFailed: {
+					reply.code(400);
+
+					response.message.readable = 'Pleaes check your email address.';
+
+					break;
+				}
+
+				case EUserError.userUniquenessCheckFailed: {
+					reply.code(400);
+
+					response.message.readable = 'A user with same email alrady registered.';
+
+					break;
+				}
 			}
 
-			// Assign JWT
-			const jwt = await reply.jwtSign({
-				i: one.i,
-			});
+			return response;
+		},
+	});
 
-			reply.setCookie('a', jwt, {
-				path: '/',
-				secure: true,
-				httpOnly: true,
-				sameSite: true,
-			});
+	fastify.route({
+		url: '/s',
+		method: 'POST',
+		schema: {
+			body: RUserVerifyBody,
+			response: {
+				200: RUserVerifyResponse,
+				400: RUserVerifyResponse,
+			},
+		},
+		async handler(request, reply) {
+			const [code, isValid, i] = await user.verify(request.body.email, request.body.password);
+			const response = createBaseResponse(code);
 
-			return {
-				code: 'sign_success' as const,
-			};
+			if (code !== EUserError.userAuthenticated || !isValid) {
+				reply.code(400);
+
+				response.message.readable = 'We failed to sign your session as you gave invalid information.';
+
+				return response;
+			}
+
+			reply.setCookie('a', await reply.jwtSign({i}));
+
+			response.message.readable = 'You signed in.';
+
+			return response;
 		},
 	});
 

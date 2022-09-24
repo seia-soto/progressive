@@ -1,5 +1,5 @@
 import got, {Progress} from 'got';
-import derive from '../../utils/derive.js';
+import derive from '../error/derive.js';
 
 export const downloadLimit = 2 * 1000 * 1000; // 2MB
 
