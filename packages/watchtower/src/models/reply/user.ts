@@ -2,6 +2,9 @@ import {Type} from '@sinclair/typebox';
 import {RBaseResponse} from './common';
 
 // Definition
+export const RTUserId = Type.Number({
+	minimum: 0,
+});
 export const RTUserEmail = Type.String({
 	minLength: 'a@b.c'.length,
 	maxLength: 320,
@@ -44,7 +47,8 @@ export const RUserVerifyResponse = RBaseResponse;
 export const RUserEmailTokenCreateResponse = RBaseResponse;
 
 // EmailTokenVerify
-export const RUserEmailTokenVerifySearch = Type.Object({
+export const RUserEmailTokenVerifyQuery = Type.Object({
+	i: RTUserId,
 	token: RTUserEmailToken,
 });
 export const RUserEmailTokenVerifyResponse = RBaseResponse;

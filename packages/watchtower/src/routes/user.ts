@@ -1,7 +1,7 @@
 import {EUserError} from '../models/error/keys.js';
 import {user} from '../models/index.js';
 import {createBaseResponse} from '../models/reply/common.js';
-import {RUserCreateBody, RUserCreateResponse, RUserVerifyBody, RUserVerifyResponse} from '../models/reply/user.js';
+import {RUserCreateBody, RUserCreateResponse, RUserEmailTokenVerifyQuery, RUserEmailTokenVerifyResponse, RUserVerifyBody, RUserVerifyResponse} from '../models/reply/user.js';
 import {TFastifyTypedPluginCallback} from '../typeRef.js';
 
 export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
@@ -21,7 +21,8 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 
 			switch (code) {
 				case EUserError.userCreated: {
-					response.message.readable = 'Your account was created.';
+					response.message.identifiable = 'Your account created but you need to do email verification to continue.';
+					response.message.readable = 'Please check your email inbox to continue signing up.';
 
 					break;
 				}
@@ -29,7 +30,8 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 				case EUserError.userEmailValidationFailed: {
 					reply.code(400);
 
-					response.message.readable = 'Pleaes check your email address.';
+					response.message.identifiable = 'Your email format is not valid.';
+					response.message.readable = 'Please fix your email format or write again to fix typing error.';
 
 					break;
 				}
@@ -64,7 +66,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			if (code !== EUserError.userAuthenticated || !isValid) {
 				reply.code(400);
 
-				response.message.readable = 'We failed to sign your session as you gave invalid information.';
+				response.message.readable = 'We failed to sign you in as you gave invalid information.';
 
 				return response;
 			}
@@ -72,6 +74,35 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			reply.setCookie('a', await reply.jwtSign({i}));
 
 			response.message.readable = 'You signed in.';
+
+			return response;
+		},
+	});
+
+	fastify.route({
+		url: '/a',
+		method: 'POST',
+		schema: {
+			querystring: RUserEmailTokenVerifyQuery,
+			response: {
+				200: RUserEmailTokenVerifyResponse,
+				400: RUserEmailTokenVerifyResponse,
+			},
+		},
+		async handler(request, reply) {
+			const [code] = await user.verifyEmailToken(request.query.i, request.query.token);
+			const response = createBaseResponse(code);
+
+			if (code !== EUserError.userEmailTokenVerified) {
+				response.message.readable = 'Your email was verified.';
+
+				return response;
+			}
+
+			reply.code(400);
+
+			response.message.identifiable = 'Your email token was invalid.';
+			response.message.readable = 'Please create another email verification request and try again.';
 
 			return response;
 		},

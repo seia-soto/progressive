@@ -18,20 +18,11 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			const [code] = await user.modify(request.user.i, request.body);
 			const response = createBaseResponse(code);
 
-			switch (code) {
-				case EUserError.userModified: {
-					response.message.readable = 'A data for account was saved.';
-
-					break;
-				}
-
-				case EUserError.userModifiedNothing: {
-					response.message.identifiable = 'You requested modification but nothing actually modified.';
-					response.message.readable = 'A data for account was saved.';
-
-					break;
-				}
+			if (code === EUserError.userModifiedNothing) {
+				response.message.identifiable = 'You requested modification but nothing actually modified.';
 			}
+
+			response.message.readable = 'A data for account was saved.';
 
 			return response;
 		},
