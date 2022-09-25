@@ -1,3 +1,4 @@
+import {greaterThan} from '@databases/pg-typed';
 import {blocklist, db, instance, user} from './database/provider.js';
 import User from './database/schema/user.js';
 import derive from './error/derive.js';
@@ -89,7 +90,7 @@ export const verifyEmailToken = async (id: number, token: string) => {
 	}
 
 	return db.tx(async t => {
-		const one = await user(t).find({i: id}).select('email_token').one();
+		const one = await user(t).find({i: id, email_token: greaterThan(-1)}).select('email_token').one();
 
 		if (!one || one.email_token !== key) {
 			return [EUserError.userEmailTokenValidationFailed] as const;
