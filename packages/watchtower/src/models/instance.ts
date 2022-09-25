@@ -3,6 +3,22 @@ import {Instance, User} from './database/schema/index.js';
 import {EInstanceError} from './error/keys.js';
 import {isDomain} from './validator/common.js';
 
+export const query = async (id: number) => db.tx(async t => {
+	const one = await instance(t).find({i: id}).select('i', 'alias', 'status', 'upstream');
+
+	if (!one) {
+		return [EInstanceError.instanceQueryFailed] as const;
+	}
+
+	return [EInstanceError.instanceQueried, one] as const;
+});
+
+export const queryByUser = async (user: User['i']) => db.tx(async t => {
+	const many = await instance(t).find({i_user: user}).select('i', 'alias', 'status', 'upstream').all();
+
+	return [EInstanceError.instanceQueried, many] as const;
+});
+
 export const create = async (user: User['i']) => db.tx(async t => {
 	const time = new Date();
 

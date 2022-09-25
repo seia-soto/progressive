@@ -26,6 +26,8 @@ export const enum EUserError {
 
 export const enum EInstanceError {
   instanceCreated = 'instanceCreated',
+  instanceQueried = 'instanceQueried',
+  instanceQueryFailed = 'instanceQueryFailed',
   instanceRemoved = 'instanceRemoved',
   instanceModified = 'instanceModified',
   instanceUpstreamValidationFailed = 'instanceUpstreamValidationFailed',
