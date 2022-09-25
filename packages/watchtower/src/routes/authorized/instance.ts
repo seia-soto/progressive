@@ -1,7 +1,7 @@
 import {EInstanceError} from '../../models/error/keys.js';
 import {instance} from '../../models/index.js';
 import {createBaseResponse, RBaseResponse} from '../../models/reply/common.js';
-import {RInstanceCreateResponse, RInstanceModifyBody, RInstanceModifyParam, RInstanceModifyResponse, RInstanceQueryByUserResponse, RInstanceQueryParam, RInstanceQueryResponse} from '../../models/reply/instance.js';
+import {RInstanceCreateResponse, RInstanceModifyBody, RInstanceModifyParam, RInstanceModifyResponse, RInstanceQueryByUserResponse, RInstanceQueryParam, RInstanceQueryResponse, RInstanceRemoveParam, RInstanceRemoveResponse} from '../../models/reply/instance.js';
 import {TFastifyTypedPluginCallback} from '../../typeRef.js';
 
 export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
@@ -112,6 +112,25 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 					break;
 				}
 			}
+
+			return response;
+		},
+	});
+
+	fastify.route({
+		url: '/:i',
+		method: 'DELETE',
+		schema: {
+			params: RInstanceRemoveParam,
+			response: {
+				200: RInstanceRemoveResponse,
+			},
+		},
+		async handler(request) {
+			const [code] = await instance.remove(request.params.i);
+			const response = createBaseResponse(code);
+
+			response.message.readable = 'You removed the instance.';
 
 			return response;
 		},

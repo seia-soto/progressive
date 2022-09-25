@@ -34,9 +34,10 @@ export const RInstanceQueryResponse = RBaseResponseWithPayload(RTInstance);
 export const RInstanceQueryByUserResponse = RBaseResponseWithPayload(Type.Array(RTInstance));
 
 // Remove
-export const RInstanceRemoveBody = Type.Object({
+export const RInstanceRemoveParam = Type.Object({
 	i: RTInstanceId,
 });
+export const RInstanceRemoveResponse = RBaseResponse;
 
 // Modify
 export const RInstanceModifyParam = Type.Object({

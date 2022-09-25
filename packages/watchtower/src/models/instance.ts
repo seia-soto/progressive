@@ -46,7 +46,7 @@ export const remove = async (id: Instance['i']) => db.tx(async t => {
 	await blocklist(t).delete({i_instance: id});
 	await instance(t).delete({i: id});
 
-	return id;
+	return [EInstanceError.instanceRemoved] as const;
 });
 
 export type TInstanceModifiablePayload = Partial<Pick<Instance, 'alias' | 'upstream'>>
