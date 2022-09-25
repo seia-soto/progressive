@@ -13,16 +13,6 @@ export const RBaseResponse = Type.Object({
 	}),
 });
 
-export type TRBaseResponse = Static<typeof RBaseResponse>
-
-export const createBaseResponse = (code: string = EUnhandledError.unknown): TRBaseResponse => ({
-	code,
-	message: {
-		identifiable: '',
-		readable: 'Sorry, We failed to process your request. Please, contact us if you experience again after retrying.',
-	},
-});
-
 export const RBaseResponseWithPayload = <T extends TSchema>(type: T) => Type.Object({
 	code: Type.String(),
 	message: Type.Object({
@@ -34,4 +24,11 @@ export const RBaseResponseWithPayload = <T extends TSchema>(type: T) => Type.Obj
 		}),
 	}),
 	payload: type,
+});
+
+export const createBaseResponse = (code: string = EUnhandledError.unknown): Static<typeof RBaseResponse> => ({
+	code,
+	message: {
+		readable: 'Sorry, We failed to process your request. Please, contact us if you experience again after retrying.',
+	},
 });

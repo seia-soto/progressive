@@ -11,6 +11,8 @@ export const enum EUserError {
   userCreated = 'userCreated',
   userUniquenessCheckFailed = 'userUniquenessCheckFailed',
   userEmailValidationFailed = 'userEmailValidationFailed',
+  userQueried = 'userQueried',
+  userQueryFailed = 'userQueryFailed',
   userRemoved = 'userRemoved',
   userModified = 'userModified',
   userModifiedNothing = 'userModifiedNothing',

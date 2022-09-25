@@ -1,10 +1,37 @@
 import {EUserError} from '../../models/error/keys.js';
 import {user} from '../../models/index.js';
 import {createBaseResponse} from '../../models/reply/common.js';
-import {RUserModifyBody, RUserModifyResponse, RUserRemoveBody, RUserRemoveResponse} from '../../models/reply/user.js';
+import {RUserModifyBody, RUserModifyResponse, RUserQueryResponse, RUserRemoveBody, RUserRemoveResponse} from '../../models/reply/user.js';
 import {TFastifyTypedPluginCallback} from '../../typeRef.js';
 
 export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
+	fastify.route({
+		url: '/',
+		method: 'GET',
+		schema: {
+			response: {
+				200: RUserQueryResponse,
+			},
+		},
+		async handler(request, reply) {
+			const [code, one] = await user.query(request.user.i);
+
+			if (code !== EUserError.userQueried) {
+				reply.clearCookie('a');
+
+				throw new Error('The user self-queried but does not exist: ' + request.user.i);
+			}
+
+			return {
+				code,
+				message: {
+					readable: 'You queried yourself.',
+				},
+				payload: one,
+			};
+		},
+	});
+
 	fastify.route({
 		url: '/',
 		method: 'PUT',

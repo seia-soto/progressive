@@ -1,5 +1,5 @@
 import {Type} from '@sinclair/typebox';
-import {RBaseResponse} from './common.js';
+import {RBaseResponse, RBaseResponseWithPayload} from './common.js';
 
 // Definition
 export const RTUserId = Type.Number({
@@ -18,6 +18,11 @@ export const RTUserEmailToken = Type.String({
 	maxLength: 16,
 });
 
+export const RUser = Type.Object({
+	i: RTUserId,
+	email: RTUserEmail,
+});
+
 // Create
 export const RUserCreateBody = Type.Object({
 	email: RTUserEmail,
@@ -25,6 +30,9 @@ export const RUserCreateBody = Type.Object({
 	passwordConfirmation: RTUserPassword,
 });
 export const RUserCreateResponse = RBaseResponse;
+
+// Query
+export const RUserQueryResponse = RBaseResponseWithPayload(RUser);
 
 // Remove
 export const RUserRemoveBody = Type.Object({

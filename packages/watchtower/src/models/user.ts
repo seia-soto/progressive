@@ -6,6 +6,16 @@ import {EUserError} from './error/keys.js';
 import {encode, validate} from './hash.js';
 import {isEmail} from './validator/common.js';
 
+export const query = async (id: number) => db.tx(async t => {
+	const one = await user(t).find({i: id}).select('i', 'email').one();
+
+	if (!one) {
+		return [EUserError.userQueryFailed] as const;
+	}
+
+	return [EUserError.userQueried, one] as const;
+});
+
 export const create = async (email: string, password: string) => {
 	if (!isEmail(email)) {
 		return [EUserError.userEmailValidationFailed] as const;
