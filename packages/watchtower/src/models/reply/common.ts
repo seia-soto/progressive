@@ -18,7 +18,7 @@ export type TRBaseResponse = Static<typeof RBaseResponse>
 export const createBaseResponse = (code: string = EUnhandledError.unknown): TRBaseResponse => ({
 	code,
 	message: {
-		identifiable: 'Our manual to mitigate the error failed. Please, contact us for future solution.',
+		identifiable: '',
 		readable: 'Sorry, We failed to process your request. Please, contact us if you experience again after retrying.',
 	},
 });

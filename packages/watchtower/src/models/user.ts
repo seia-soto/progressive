@@ -1,4 +1,4 @@
-import {db, user} from './database/provider.js';
+import {blocklist, db, instance, user} from './database/provider.js';
 import User from './database/schema/user.js';
 import derive from './error/derive.js';
 import {EUserError} from './error/keys.js';
@@ -32,6 +32,8 @@ export const create = async (email: string, password: string) => {
 };
 
 export const remove = async (id: number) => db.tx(async t => {
+	await blocklist(t).delete({i_user: id});
+	await instance(t).delete({i_user: id});
 	await user(t).delete({i: id});
 
 	return [EUserError.userRemoved] as const;

@@ -1,7 +1,7 @@
 import {EUserError} from '../../models/error/keys.js';
 import {user} from '../../models/index.js';
 import {createBaseResponse} from '../../models/reply/common.js';
-import {RUserModifyBody, RUserModifyResponse} from '../../models/reply/user.js';
+import {RUserModifyBody, RUserModifyResponse, RUserRemoveBody, RUserRemoveResponse} from '../../models/reply/user.js';
 import {TFastifyTypedPluginCallback} from '../../typeRef.js';
 
 export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
@@ -23,6 +23,28 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			}
 
 			response.message.readable = 'A data for account was saved.';
+
+			return response;
+		},
+	});
+
+	fastify.route({
+		url: '/',
+		method: 'DELETE',
+		schema: {
+			body: RUserRemoveBody,
+			response: {
+				200: RUserRemoveResponse,
+			},
+		},
+		async handler(request, reply) {
+			const [code] = await user.remove(request.user.i);
+			reply.clearCookie('a');
+
+			const response = createBaseResponse(code);
+
+			// There is no other response code branches
+			response.message.readable = 'Your account was deleted.';
 
 			return response;
 		},
