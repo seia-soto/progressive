@@ -80,6 +80,26 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 	});
 
 	fastify.route({
+		url: '/s',
+		method: 'DELETE',
+		schema: {
+			response: {
+				200: RUserVerifyResponse,
+				400: RUserVerifyResponse,
+			},
+		},
+		async handler(request, reply) {
+			reply.clearCookie('a');
+
+			const response = createBaseResponse(EUserError.userSessionExpired);
+
+			response.message.readable = 'You signed out.';
+
+			return response;
+		},
+	});
+
+	fastify.route({
 		url: '/a',
 		method: 'GET',
 		schema: {

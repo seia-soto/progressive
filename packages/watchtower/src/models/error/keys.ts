@@ -16,6 +16,7 @@ export const enum EUserError {
   userModifiedNothing = 'userModifiedNothing',
   userAuthenticated = 'userAuthenticated',
   userAuthenticationFailed = 'userAuthenticationFailed',
+  userSessionExpired = 'userSessionExpired',
   userEmailTokenCreated = 'userEmailTokenCreated',
   userEmailTokenVerified = 'userEmailTokenVerified',
   userEmailTokenValidationFailed = 'userEmailTokenValidationFailed'
