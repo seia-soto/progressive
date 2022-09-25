@@ -22,11 +22,12 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 				throw new Error('The user self-queried but does not exist: ' + request.user.i);
 			}
 
+			const response = createBaseResponse(code);
+
+			response.message.readable = 'You queried yourself.';
+
 			return {
-				code,
-				message: {
-					readable: 'You queried yourself.',
-				},
+				...response,
 				payload: one,
 			};
 		},
