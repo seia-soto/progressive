@@ -1,6 +1,6 @@
 import {EUserError} from '../models/error/keys.js';
 import {user} from '../models/index.js';
-import {createBaseResponse} from '../models/reply/common.js';
+import {createBaseResponse, RBaseResponse} from '../models/reply/common.js';
 import {RUserCreateBody, RUserCreateResponse, RUserEmailTokenVerifyQuery, RUserEmailTokenVerifyResponse, RUserVerifyBody, RUserVerifyResponse} from '../models/reply/user.js';
 import {TFastifyTypedPluginCallback} from '../typeRef.js';
 
@@ -12,7 +12,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			body: RUserCreateBody,
 			response: {
 				200: RUserCreateResponse,
-				400: RUserCreateResponse,
+				400: RBaseResponse,
 			},
 		},
 		async handler(request, reply) {
@@ -56,7 +56,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			body: RUserVerifyBody,
 			response: {
 				200: RUserVerifyResponse,
-				400: RUserVerifyResponse,
+				400: RBaseResponse,
 			},
 		},
 		async handler(request, reply) {
@@ -85,7 +85,6 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 		schema: {
 			response: {
 				200: RUserVerifyResponse,
-				400: RUserVerifyResponse,
 			},
 		},
 		async handler(request, reply) {
@@ -106,7 +105,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			querystring: RUserEmailTokenVerifyQuery,
 			response: {
 				200: RUserEmailTokenVerifyResponse,
-				400: RUserEmailTokenVerifyResponse,
+				400: RBaseResponse,
 			},
 		},
 		async handler(request, reply) {
