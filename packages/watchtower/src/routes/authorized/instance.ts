@@ -1,7 +1,7 @@
 import {EInstanceError} from '../../models/error/keys.js';
 import {instance} from '../../models/index.js';
 import {createBaseResponse, RBaseResponse} from '../../models/reply/common.js';
-import {RInstanceQueryByUserResponse, RInstanceQueryParam, RInstanceQueryResponse} from '../../models/reply/instance.js';
+import {RInstanceCreateResponse, RInstanceQueryByUserResponse, RInstanceQueryParam, RInstanceQueryResponse} from '../../models/reply/instance.js';
 import {TFastifyTypedPluginCallback} from '../../typeRef.js';
 
 export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
@@ -54,6 +54,24 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 				...response,
 				payload: one,
 			};
+		},
+	});
+
+	fastify.route({
+		url: '/',
+		method: 'POST',
+		schema: {
+			response: {
+				200: RInstanceCreateResponse,
+			},
+		},
+		async handler(request) {
+			const [code] = await instance.create(request.user.i);
+			const response = createBaseResponse(code);
+
+			response.message.readable = 'You created a new instance.';
+
+			return response;
 		},
 	});
 
