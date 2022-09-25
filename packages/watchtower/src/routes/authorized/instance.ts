@@ -27,7 +27,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 	});
 
 	fastify.route({
-		url: '/:i',
+		url: '/:instance',
 		method: 'GET',
 		schema: {
 			params: RInstanceQueryParam,
@@ -37,7 +37,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			},
 		},
 		async handler(request, reply) {
-			const [code, one] = await instance.query(request.params.i);
+			const [code, one] = await instance.query(request.params.instance);
 			const response = createBaseResponse(code);
 
 			if (code !== EInstanceError.instanceQueried) {
@@ -76,7 +76,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 	});
 
 	fastify.route({
-		url: '/:i',
+		url: '/:instance',
 		method: 'PUT',
 		schema: {
 			params: RInstanceModifyParam,
@@ -87,7 +87,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			},
 		},
 		async handler(request, reply) {
-			const [code] = await instance.modify(request.params.i, request.body);
+			const [code] = await instance.modify(request.params.instance, request.body);
 			const response = createBaseResponse(code);
 
 			switch (code) {
@@ -118,7 +118,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 	});
 
 	fastify.route({
-		url: '/:i',
+		url: '/:instance',
 		method: 'DELETE',
 		schema: {
 			params: RInstanceRemoveParam,
@@ -127,7 +127,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			},
 		},
 		async handler(request) {
-			const [code] = await instance.remove(request.params.i);
+			const [code] = await instance.remove(request.params.instance);
 			const response = createBaseResponse(code);
 
 			response.message.readable = 'You removed the instance.';

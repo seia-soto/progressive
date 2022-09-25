@@ -26,7 +26,7 @@ export const RInstanceCreateResponse = RBaseResponse;
 
 // Query
 export const RInstanceQueryParam = Type.Object({
-	i: RTInstanceId,
+	instance: RTInstanceId,
 });
 export const RInstanceQueryResponse = RBaseResponseWithPayload(RTInstance);
 
@@ -35,13 +35,13 @@ export const RInstanceQueryByUserResponse = RBaseResponseWithPayload(Type.Array(
 
 // Remove
 export const RInstanceRemoveParam = Type.Object({
-	i: RTInstanceId,
+	instance: RTInstanceId,
 });
 export const RInstanceRemoveResponse = RBaseResponse;
 
 // Modify
 export const RInstanceModifyParam = Type.Object({
-	i: RTInstanceId,
+	instance: RTInstanceId,
 });
 export const RInstanceModifyBody = Type.Object({
 	alias: Type.Optional(RTInstanceAlias),

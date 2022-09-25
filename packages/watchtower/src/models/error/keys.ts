@@ -33,3 +33,12 @@ export const enum EInstanceError {
   instanceUpstreamValidationFailed = 'instanceUpstreamValidationFailed',
   instanceModifiedNothing = 'instanceModifiedNothing'
 }
+
+export const enum EBlocklistError {
+  blocklistCreated = 'blocklistCreated',
+  blocklistQueried = 'blocklistQueried',
+  blocklistRemoved = 'blocklistRemoved',
+  blocklistModified = 'blocklistModified',
+  blocklistAddressValidationFailed = 'blocklistAddressValidationFailed',
+  blocklistModifiedNothing = 'blocklistModifiedNothing'
+}
