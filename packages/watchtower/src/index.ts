@@ -31,8 +31,11 @@ export const factory = async () => {
 	fastify.register(router, {prefix: '/s'});
 
 	fastify.setErrorHandler((error, request, reply) => {
+		const time = Date.now();
+
 		console.error(
-			Date.now(),
+			time,
+			request.id,
 			request.method,
 			request.url,
 			request.headers['user-agent'] ?? 'bot',
@@ -41,6 +44,8 @@ export const factory = async () => {
 		);
 
 		const response = createBaseResponse();
+
+		response.message.identifiable = 'progressive-process-id:' + time + '-' + request.id;
 
 		reply.code(500);
 		reply.send(response);
