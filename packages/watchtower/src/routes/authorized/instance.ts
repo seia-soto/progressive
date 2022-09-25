@@ -1,7 +1,7 @@
 import {EInstanceError} from '../../models/error/keys.js';
 import {instance} from '../../models/index.js';
 import {createBaseResponse, RBaseResponse} from '../../models/reply/common.js';
-import {RInstanceCreateResponse, RInstanceQueryByUserResponse, RInstanceQueryParam, RInstanceQueryResponse} from '../../models/reply/instance.js';
+import {RInstanceCreateResponse, RInstanceModifyBody, RInstanceModifyParam, RInstanceModifyResponse, RInstanceQueryByUserResponse, RInstanceQueryParam, RInstanceQueryResponse} from '../../models/reply/instance.js';
 import {TFastifyTypedPluginCallback} from '../../typeRef.js';
 
 export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
@@ -27,7 +27,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 	});
 
 	fastify.route({
-		url: '/:id',
+		url: '/:i',
 		method: 'GET',
 		schema: {
 			params: RInstanceQueryParam,
@@ -70,6 +70,48 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			const response = createBaseResponse(code);
 
 			response.message.readable = 'You created a new instance.';
+
+			return response;
+		},
+	});
+
+	fastify.route({
+		url: '/:i',
+		method: 'PUT',
+		schema: {
+			params: RInstanceModifyParam,
+			body: RInstanceModifyBody,
+			response: {
+				200: RInstanceModifyResponse,
+				400: RBaseResponse,
+			},
+		},
+		async handler(request, reply) {
+			const [code] = await instance.modify(request.params.i, request.body);
+			const response = createBaseResponse(code);
+
+			switch (code) {
+				case EInstanceError.instanceModified: {
+					response.message.readable = 'You modified the instance.';
+
+					break;
+				}
+
+				case EInstanceError.instanceModifiedNothing: {
+					response.message.identifiable = 'You requested modification but nothing actually modified.';
+					response.message.readable = 'You modified the instance.';
+
+					break;
+				}
+
+				case EInstanceError.instanceUpstreamValidationFailed: {
+					reply.code(400);
+
+					response.message.readable = 'The format of instance upstream protocol should be one of doh, dot, and dns and qualify its corresponding value format.';
+
+					break;
+				}
+			}
 
 			return response;
 		},

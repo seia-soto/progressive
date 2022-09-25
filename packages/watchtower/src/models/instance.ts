@@ -49,7 +49,7 @@ export const remove = async (id: Instance['i']) => db.tx(async t => {
 	return id;
 });
 
-export type TInstanceModifiablePayload = Pick<Instance, 'alias' | 'upstream'>
+export type TInstanceModifiablePayload = Partial<Pick<Instance, 'alias' | 'upstream'>>
 
 export const modify = async (id: Instance['i'], payload: TInstanceModifiablePayload) => {
 	const time = new Date();

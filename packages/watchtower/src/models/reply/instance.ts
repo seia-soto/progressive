@@ -39,8 +39,11 @@ export const RInstanceRemoveBody = Type.Object({
 });
 
 // Modify
+export const RInstanceModifyParam = Type.Object({
+	i: RTInstanceId,
+});
 export const RInstanceModifyBody = Type.Object({
-	alias: RTInstanceAlias,
-	upstream: RTInstanceUpstream,
+	alias: Type.Optional(RTInstanceAlias),
+	upstream: Type.Optional(RTInstanceUpstream),
 });
 export const RInstanceModifyResponse = RBaseResponse;
