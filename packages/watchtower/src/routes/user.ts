@@ -81,7 +81,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 
 	fastify.route({
 		url: '/a',
-		method: 'POST',
+		method: 'GET',
 		schema: {
 			querystring: RUserEmailTokenVerifyQuery,
 			response: {
