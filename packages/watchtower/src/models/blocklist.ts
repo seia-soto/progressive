@@ -9,7 +9,7 @@ export const queryByInstance = async (instance: Instance['i']) => db.tx(async t 
 	return [EBlocklistError.blocklistQueried, many] as const;
 });
 
-export const create = async (user: User['i'], instance: Instance['i'], name: string, address: string) => db.tx(async t => {
+export const create = async (user: User['i'], instance: Instance['i'], name: Blocklist['name'], address: Blocklist['address']) => db.tx(async t => {
 	const time = new Date();
 
 	const [one] = await blocklist(t).insert({
@@ -24,7 +24,7 @@ export const create = async (user: User['i'], instance: Instance['i'], name: str
 	return [EBlocklistError.blocklistCreated, one] as const;
 });
 
-export const remove = async (id: number) => db.tx(async t => {
+export const remove = async (id: Blocklist['i']) => db.tx(async t => {
 	await blocklist(t).delete({i: id});
 
 	return [EBlocklistError.blocklistRemoved] as const;
@@ -32,7 +32,7 @@ export const remove = async (id: number) => db.tx(async t => {
 
 export type TBlocklistModifiablePayload = Partial<Pick<Blocklist, 'name' | 'address'>>
 
-export const modify = async (id: number, payload: TBlocklistModifiablePayload) => {
+export const modify = async (id: Blocklist['i'], payload: TBlocklistModifiablePayload) => {
 	const modified: Partial<Blocklist> = {
 		updated_at: new Date(),
 	};

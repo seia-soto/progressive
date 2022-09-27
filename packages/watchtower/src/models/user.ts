@@ -6,7 +6,7 @@ import {EUserError} from './error/keys.js';
 import {encode, validate} from './hash.js';
 import {isEmail} from './validator/common.js';
 
-export const query = async (id: number) => db.tx(async t => {
+export const query = async (id: User['i']) => db.tx(async t => {
 	const one = await user(t).find({i: id}).select('i', 'email').one();
 
 	if (!one) {
@@ -16,7 +16,7 @@ export const query = async (id: number) => db.tx(async t => {
 	return [EUserError.userQueried, one] as const;
 });
 
-export const create = async (email: string, password: string) => {
+export const create = async (email: User['email'], password: User['password']) => {
 	if (!isEmail(email)) {
 		return [EUserError.userEmailValidationFailed] as const;
 	}
@@ -42,7 +42,7 @@ export const create = async (email: string, password: string) => {
 	});
 };
 
-export const remove = async (id: number) => db.tx(async t => {
+export const remove = async (id: User['i']) => db.tx(async t => {
 	await blocklist(t).delete({i_user: id});
 	await instance(t).delete({i_user: id});
 	await user(t).delete({i: id});
@@ -52,7 +52,7 @@ export const remove = async (id: number) => db.tx(async t => {
 
 export type TUserModifiablePayload = Pick<User, 'email' | 'password'>
 
-export const modify = async (id: number, payload: TUserModifiablePayload) => {
+export const modify = async (id: User['i'], payload: TUserModifiablePayload) => {
 	const modified: Partial<User> = {};
 
 	if (payload.email) {
@@ -74,7 +74,7 @@ export const modify = async (id: number, payload: TUserModifiablePayload) => {
 	});
 };
 
-export const verify = async (email: string, password: string) => {
+export const verify = async (email: User['email'], password: User['password']) => {
 	const one = await user(db).find({email, email_token: -1}).select('i', 'password').one();
 
 	if (!one) {
@@ -84,7 +84,7 @@ export const verify = async (email: string, password: string) => {
 	return [EUserError.userAuthenticated, await validate(password, one.password), one.i] as const;
 };
 
-export const createEmailToken = async (id: number) => db.tx(async t => {
+export const createEmailToken = async (id: User['i']) => db.tx(async t => {
 	const key = Math.floor(Math.random() * Date.now());
 
 	await user(t).update({i: id}, {email_token: key});
@@ -92,7 +92,7 @@ export const createEmailToken = async (id: number) => db.tx(async t => {
 	return [EUserError.userEmailTokenCreated, key.toString(36)] as const;
 });
 
-export const verifyEmailToken = async (id: number, token: string) => {
+export const verifyEmailToken = async (id: User['i'], token: string) => {
 	const [keyParsingError, key] = await derive(parseInt(token, 36));
 
 	if (keyParsingError) {

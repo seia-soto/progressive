@@ -3,7 +3,7 @@ import {Instance, User} from './database/schema/index.js';
 import {EInstanceError} from './error/keys.js';
 import {isDomain} from './validator/common.js';
 
-export const query = async (id: number) => db.tx(async t => {
+export const query = async (id: Instance['i']) => db.tx(async t => {
 	const one = await instance(t).find({i: id}).select('i', 'alias', 'status', 'upstream');
 
 	if (!one) {
