@@ -22,19 +22,19 @@ export const instance = got.extend({
 	handlers: [
 		(options, next) => {
 			const {downloadLimit} = options.context;
-			const instance = next(options);
+			const client = next(options);
 
 			if (typeof downloadLimit === 'number') {
 				// @ts-expect-error
-				instance.on('downloadProgress', (progress: Progress) => {
+				client.on('downloadProgress', (progress: Progress) => {
 					if (progress.transferred > downloadLimit && progress.percent !== 1) {
 						// @ts-expect-error
-						instance.cancel();
+						client.cancel();
 					}
 				});
 			}
 
-			return instance;
+			return client;
 		},
 	],
 	context: {
