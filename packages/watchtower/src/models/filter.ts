@@ -1,11 +1,11 @@
 import got, {Progress} from 'got';
-import derive from '../error/derive.js';
+import derive from './error/derive.js';
 
 export const downloadLimit = 2 * 1000 * 1000; // 2MB
 
-export const instance = got.extend({
+export const fetcher = got.extend({
 	headers: {
-		'user-agent': 'seia-soto/progressive',
+		'user-agent': 'seia-soto/progressive (a DNS server)',
 	},
 	maxRedirects: 4,
 	timeout: {
@@ -30,6 +30,8 @@ export const instance = got.extend({
 					if (progress.transferred > downloadLimit && progress.percent !== 1) {
 						// @ts-expect-error
 						client.cancel();
+
+                        // TODO: throw an Error here to handle the download size limit error!
 					}
 				});
 			}
@@ -43,7 +45,7 @@ export const instance = got.extend({
 });
 
 export const load = async (url: string) => {
-	const [, head] = await derive(instance.head(url));
+	const [, head] = await derive(fetcher.head(url));
 
 	if (
 		head
@@ -52,7 +54,7 @@ export const load = async (url: string) => {
 		return '';
 	}
 
-	const [, response] = await derive(instance.get(url).text());
+	const [, response] = await derive(fetcher.get(url).text());
 
 	return response || '';
 };
