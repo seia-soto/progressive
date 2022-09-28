@@ -31,7 +31,7 @@ export const fetcher = got.extend({
 						// @ts-expect-error
 						client.cancel();
 
-                        // TODO: throw an Error here to handle the download size limit error!
+						// TODO: throw an Error here to handle the download size limit error!
 					}
 				});
 			}
