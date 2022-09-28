@@ -1,0 +1,25 @@
+{
+  "name": "filter",
+  "version": "1.0.0",
+  "main": "out/bin.js",
+  "type": "module",
+  "scripts": {
+    "build": "swc src -d out --config-file ../../.swcrc",
+    "start": "node --loader ts-node/esm src/index.ts",
+    "test": "ava"
+  },
+  "keywords": [],
+  "author": "HoJeong Go <seia@outlook.kr>",
+  "private": true,
+  "ava": {
+    "extensions": {
+      "ts": "module"
+    },
+    "nodeArguments": [
+      "--loader=ts-node/esm"
+    ]
+  },
+  "devDependencies": {
+    "ava": "^4.3.3"
+  }
+}

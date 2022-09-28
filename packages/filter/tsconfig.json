@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {},
+  "ts-node": {
+    "compilerOptions": {
+      "module": "ES2020",
+      "moduleResolution": "node"
+    },
+    "files": true,
+    "swc": true
+  }
+}
