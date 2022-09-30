@@ -1,10 +1,10 @@
 {
   "name": "filter",
   "version": "1.0.0",
-  "main": "out/bin.js",
+  "main": "out/index.js",
   "type": "module",
   "scripts": {
-    "build": "swc src -d out --config-file ../../.swcrc",
+    "build": "swc src -d out --config-file ../../.swcrc && tsc src/index.ts --d --outDir out --emitDeclarationOnly --target es2022",
     "start": "node --loader ts-node/esm src/index.ts",
     "test": "ava"
   },

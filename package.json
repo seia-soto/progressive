@@ -3,19 +3,20 @@
   "private": true,
   "author": "HoJeong Go <seia@outlook.kr>",
   "scripts": {
-    "tsc": "tsc"
+    "tsc": "tsc",
+    "build": "pnpm --stream -r build"
   },
   "devDependencies": {
-    "@sinclair/typebox": "^0.24.28",
+    "@sinclair/typebox": "^0.24.44",
     "@swc/cli": "^0.1.57",
-    "@swc/core": "^1.2.244",
-    "@types/node": "^18.7.13",
-    "@typescript-eslint/eslint-plugin": "^5.35.1",
-    "@typescript-eslint/parser": "^5.35.1",
-    "eslint": ">=8.14.0",
+    "@swc/core": "^1.3.4",
+    "@types/node": "^18.7.23",
+    "@typescript-eslint/eslint-plugin": "^5.38.1",
+    "@typescript-eslint/parser": "^5.38.1",
+    "eslint": "^8.24.0",
     "eslint-config-xo": "^0.42.0",
     "ts-node": "^10.9.1",
     "tslib": "^2.4.0",
-    "typescript": "^4.8.2"
+    "typescript": "^4.8.4"
   }
 }
