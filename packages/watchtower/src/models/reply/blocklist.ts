@@ -1,6 +1,6 @@
 import {Type} from '@sinclair/typebox';
-import {RBaseResponse, RBaseResponseWithPayload} from './common';
-import {RTInstanceId} from './instance';
+import {RBaseResponse, RBaseResponseWithPayload} from './common.js';
+import {RTInstanceId} from './instance.js';
 
 // Definition
 export const RTBlocklistId = Type.Number({

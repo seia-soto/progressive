@@ -1,7 +1,7 @@
-import {blocklist, db} from './database/provider';
-import {Blocklist, Instance, User} from './database/schema';
-import {EBlocklistError} from './error/keys';
-import {isUrl} from './validator/common';
+import {blocklist, db} from './database/provider.js';
+import {Blocklist, Instance, User} from './database/schema/index.js';
+import {EBlocklistError} from './error/keys.js';
+import {isUrl} from './validator/common.js';
 
 export const queryByInstance = async (instance: Instance['i']) => db.tx(async t => {
 	const many = await blocklist(t).find({i_instance: instance}).select('i', 'name', 'address').all();

@@ -315,10 +315,6 @@ export const gateDnsFilter = (item: TFilter) => {
 		return false;
 	}
 
-	if (item.modifiers.length) {
-		return false;
-	}
-
 	if (item.pattern.endsWith('^')) {
 		item.pattern = item.pattern.slice(0, item.pattern.length - 1);
 	}

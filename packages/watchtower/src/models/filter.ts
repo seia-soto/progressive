@@ -1,5 +1,7 @@
 import got, {Progress} from 'got';
+import * as filter from 'filter';
 import derive from './error/derive.js';
+import {Node} from 'vertical-radix';
 
 export const downloadLimit = 2 * 1000 * 1000; // 2MB
 
@@ -31,7 +33,7 @@ export const fetcher = got.extend({
 						// @ts-expect-error
 						client.cancel();
 
-						// TODO: throw an Error here to handle the download size limit error!
+						throw new Error('You exceeded the download limit!');
 					}
 				});
 			}
@@ -57,4 +59,31 @@ export const load = async (url: string) => {
 	const [, response] = await derive(fetcher.get(url).text());
 
 	return response || '';
+};
+
+export const build = async (urls: string[]) => {
+	const built = {
+		positive: new Node(),
+		negative: new Node(),
+	};
+	const files = await Promise.all(urls.map(url => load(url)));
+
+	for (let i = 0; i < files.length; i++) {
+		files[i]
+			.split('\n')
+			.map(line => filter.parseDNS(line))
+			.forEach(entry => {
+				if (!entry) {
+					return;
+				}
+
+				if (entry.type === filter.EFilterType.StaticException) {
+					built.negative.insert(entry.pattern);
+				} else {
+					built.positive.insert(entry.pattern);
+				}
+			});
+	}
+
+	return built;
 };

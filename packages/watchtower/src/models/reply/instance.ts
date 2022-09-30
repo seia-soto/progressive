@@ -1,5 +1,5 @@
 import {Type} from '@sinclair/typebox';
-import {RBaseResponse, RBaseResponseWithPayload} from './common';
+import {RBaseResponse, RBaseResponseWithPayload} from './common.js';
 
 // Definition
 export const RTInstanceId = Type.Number({

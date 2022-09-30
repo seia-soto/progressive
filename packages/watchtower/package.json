@@ -9,8 +9,8 @@
     "database:test": "pg-test",
     "database:apply": "pg-migrations apply --directory src/models/database/migrates",
     "database:sync": "pg-schema --directory src/models/database/schema",
-    "build": "swc src -d out --config-file ../../.swcrc",
-    "start": "node --loader ts-node/esm src/bin.ts",
+    "build": "swc src -d out --config-file ../../.swcrc --copy-files",
+    "start": "node .",
     "test": ". scripts/test.sh"
   },
   "keywords": [],
