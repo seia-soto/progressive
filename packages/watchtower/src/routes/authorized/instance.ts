@@ -38,7 +38,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			},
 		},
 		async handler(request, reply) {
-			const [code, one] = await instance.query(request.params.instance);
+			const [code, one] = await instance.query(parseInt(request.params.instance, 10));
 			const response = createBaseResponse(code);
 
 			if (code !== EInstanceError.instanceQueried) {
@@ -88,7 +88,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			},
 		},
 		async handler(request, reply) {
-			const [code] = await instance.modify(request.params.instance, request.body);
+			const [code] = await instance.modify(parseInt(request.params.instance, 10), request.body);
 			const response = createBaseResponse(code);
 
 			switch (code) {
@@ -128,7 +128,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			},
 		},
 		async handler(request) {
-			const [code] = await instance.remove(request.params.instance);
+			const [code] = await instance.remove(parseInt(request.params.instance, 10));
 			const response = createBaseResponse(code);
 
 			response.message.readable = 'You removed the instance.';
@@ -147,7 +147,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			},
 		},
 		handler(request, reply) {
-			toBeRefreshed.put(request.params.instance);
+			toBeRefreshed.put(parseInt(request.params.instance, 10));
 
 			const response = createBaseResponse(EInstanceError.instanceFilterUpdateRequested);
 

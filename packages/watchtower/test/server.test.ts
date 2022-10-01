@@ -4,12 +4,16 @@ import untypedTest, {TestFn} from 'ava';
 import {Static} from '@sinclair/typebox';
 import {RUserCreateBody, RUserModifyBody, RUserModifyResponse, RUserQueryResponse, RUserVerifyBody} from '../src/models/reply/user.js';
 import {RBaseResponse} from '../src/models/reply/common.js';
-import {EUserError} from '../src/models/error/keys.js';
+import {EInstanceError, EUserError} from '../src/models/error/keys.js';
+import {RInstanceCreateResponse, RInstanceModifyBody, RInstanceModifyResponse, RInstanceQueryByUserResponse} from '../src/models/reply/instance.js';
 
 // @ts-expect-error
 const persistence: {
   server: TFastifyTyped,
-  cookie: Record<string, string>
+  cookie: Record<string, string>,
+	identifiers: {
+		instance: number
+	}
 } = {};
 
 const test = untypedTest as TestFn<typeof persistence>;
@@ -29,6 +33,14 @@ test.serial.before('bootstrap', async t => {
 		t.log('bootstrapping the cookie store');
 
 		t.context.cookie = {};
+	}
+
+	if (!t.context.identifiers) {
+		t.log('bootstrapping the identifier store');
+
+		t.context.identifiers = {
+			instance: -1,
+		};
 	}
 });
 
@@ -131,4 +143,67 @@ test.serial('PUT /s/a/user: modify user', async t => {
 			password,
 		} as Static<typeof RUserModifyBody>,
 	});
+});
+
+test.serial('POST /s/a/instance: create instance', async t => {
+	const response = await t.context.server.inject({
+		url: '/s/a/instance',
+		method: 'POST',
+		cookies: t.context.cookie,
+	});
+	const json = response.json<Static<typeof RInstanceCreateResponse>>();
+
+	t.log(json);
+	t.is(json.code, EInstanceError.instanceCreated);
+});
+
+test.serial('GET /s/a/instance: get instance by user', async t => {
+	const response = await t.context.server.inject({
+		url: '/s/a/instance',
+		method: 'GET',
+		cookies: t.context.cookie,
+	});
+	const json = response.json<Static<typeof RInstanceQueryByUserResponse>>();
+
+	t.log(json);
+	t.is(json.payload.length, 1);
+
+	t.context.identifiers.instance = json.payload[0].i;
+});
+
+test.serial('PUT /s/a/instance/:instance: modify instance (nothing)', async t => {
+	const response = await t.context.server.inject({
+		url: '/s/a/instance/' + t.context.identifiers.instance,
+		method: 'PUT',
+		cookies: t.context.cookie,
+		payload: {},
+	});
+	const json = response.json<Static<typeof RInstanceModifyResponse>>();
+
+	t.log(json);
+	t.is(json.code, EInstanceError.instanceModifiedNothing);
+});
+
+test.serial('PUT /s/a/instance/:instance: modify instance', async t => {
+	const response = await t.context.server.inject({
+		url: '/s/a/instance/' + t.context.identifiers.instance,
+		method: 'PUT',
+		cookies: t.context.cookie,
+		payload: {
+			alias: 'Name',
+		} as Static<typeof RInstanceModifyBody>,
+	});
+	const json = response.json<Static<typeof RInstanceModifyResponse>>();
+
+	t.log(json);
+	t.is(json.code, EInstanceError.instanceModified);
+
+	// Check modified
+	const modified = (await t.context.server.inject({
+		url: '/s/a/instance',
+		method: 'GET',
+		cookies: t.context.cookie,
+	})).json<Static<typeof RInstanceQueryByUserResponse>>();
+
+	t.is(modified.payload[0].alias, 'Name');
 });

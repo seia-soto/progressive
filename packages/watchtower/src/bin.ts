@@ -1,7 +1,7 @@
 import {factory} from './index.js';
 
 (async () => {
-	console.log('up');
+	console.time('up');
 
 	const server = await factory();
 	const address = await server.listen({
@@ -9,12 +9,16 @@ import {factory} from './index.js';
 		port: 1298,
 	});
 
+	console.timeEnd('up');
+
 	console.log(address);
 
 	process.on('SIGINT', async () => {
-		console.log('down');
+		console.time('down');
 
 		await server.close();
+
+		console.timeEnd('down');
 		process.exit(0);
 	});
 })();

@@ -1,4 +1,5 @@
 import {Type} from '@sinclair/typebox';
+import {RTNumericIdentifier} from '../format.js';
 import {RBaseResponse, RBaseResponseWithPayload} from './common.js';
 
 // Definition
@@ -26,7 +27,7 @@ export const RInstanceCreateResponse = RBaseResponse;
 
 // Query
 export const RInstanceQueryParam = Type.Object({
-	instance: RTInstanceId,
+	instance: RTNumericIdentifier,
 });
 export const RInstanceQueryResponse = RBaseResponseWithPayload(RTInstance);
 
@@ -35,13 +36,13 @@ export const RInstanceQueryByUserResponse = RBaseResponseWithPayload(Type.Array(
 
 // Remove
 export const RInstanceRemoveParam = Type.Object({
-	instance: RTInstanceId,
+	instance: RTNumericIdentifier,
 });
 export const RInstanceRemoveResponse = RBaseResponse;
 
 // Modify
 export const RInstanceModifyParam = Type.Object({
-	instance: RTInstanceId,
+	instance: RTNumericIdentifier,
 });
 export const RInstanceModifyBody = Type.Object({
 	alias: Type.Optional(RTInstanceAlias),
@@ -51,6 +52,6 @@ export const RInstanceModifyResponse = RBaseResponse;
 
 // Refreh
 export const RInstanceRefreshParam = Type.Object({
-	instance: RTInstanceId,
+	instance: RTNumericIdentifier,
 });
 export const RInstanceRefreshResponse = RBaseResponse;

@@ -1,6 +1,6 @@
 import {Type} from '@sinclair/typebox';
+import {RTNumericIdentifier} from '../format.js';
 import {RBaseResponse, RBaseResponseWithPayload} from './common.js';
-import {RTInstanceId} from './instance.js';
 
 // Definition
 export const RTBlocklistId = Type.Number({
@@ -23,7 +23,7 @@ export const RTBlocklist = Type.Object({
 
 // Create
 export const RBlocklistCreateParam = Type.Object({
-	instance: RTInstanceId,
+	instance: RTNumericIdentifier,
 });
 export const RBlocklistCreateBody = Type.Object({
 	name: RTBlocklistName,
@@ -33,19 +33,19 @@ export const RBlocklistCreateResponse = RBaseResponse;
 
 // Query
 export const RBlocklistQueryByInstanceParam = Type.Object({
-	instance: RTInstanceId,
+	instance: RTNumericIdentifier,
 });
 export const RBlocklistQueryByInstanceResponse = RBaseResponseWithPayload(Type.Array(RTBlocklist));
 
 // Remove
 export const RBlocklistRemoveParam = Type.Object({
-	blocklist: RTBlocklistId,
+	blocklist: RTNumericIdentifier,
 });
 export const RBlocklistRemoveResponse = RBaseResponse;
 
 // Modify
 export const RBlocklistModifyParam = Type.Object({
-	blocklist: RTBlocklistId,
+	blocklist: RTNumericIdentifier,
 });
 export const RBlocklistModifyBody = Type.Object({
 	name: Type.Optional(RTBlocklistName),

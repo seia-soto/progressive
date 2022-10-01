@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 export const enum EUnhandledError {
-  unknown = 'unhandledUnknownError'
+  unknown = 'unhandledUnknownError',
+  validation = 'unhandledValidationError'
 }
 
 export const enum EDatabaseError {

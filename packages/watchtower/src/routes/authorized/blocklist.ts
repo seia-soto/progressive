@@ -15,7 +15,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			},
 		},
 		async handler(request) {
-			const [code, many] = await blocklist.queryByInstance(request.params.instance);
+			const [code, many] = await blocklist.queryByInstance(parseInt(request.params.instance, 10));
 			const response = createBaseResponse(code);
 
 			response.message.readable = 'You queried blocklists of the instance.';
@@ -38,7 +38,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			},
 		},
 		async handler(request) {
-			const [code] = await blocklist.create(request.user.i, request.params.instance, request.body.name, request.body.address);
+			const [code] = await blocklist.create(request.user.i, parseInt(request.params.instance, 10), request.body.name, request.body.address);
 			const response = createBaseResponse(code);
 
 			response.message.readable = 'You created a blocklist.';
@@ -57,7 +57,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			},
 		},
 		async handler(request) {
-			const [code] = await blocklist.remove(request.params.blocklist);
+			const [code] = await blocklist.remove(parseInt(request.params.blocklist, 10));
 			const response = createBaseResponse(code);
 
 			response.message.readable = 'You removed a blocklist.';
@@ -78,7 +78,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			},
 		},
 		async handler(request, reply) {
-			const [code] = await blocklist.modify(request.params.blocklist, request.body);
+			const [code] = await blocklist.modify(parseInt(request.params.blocklist, 10), request.body);
 			const response = createBaseResponse(code);
 
 			switch (code) {
