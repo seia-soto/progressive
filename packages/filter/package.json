@@ -18,8 +18,5 @@
     "nodeArguments": [
       "--loader=ts-node/esm"
     ]
-  },
-  "devDependencies": {
-    "ava": "^4.3.3"
   }
 }
