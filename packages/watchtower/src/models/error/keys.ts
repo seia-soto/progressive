@@ -31,7 +31,8 @@ export const enum EInstanceError {
   instanceRemoved = 'instanceRemoved',
   instanceModified = 'instanceModified',
   instanceUpstreamValidationFailed = 'instanceUpstreamValidationFailed',
-  instanceModifiedNothing = 'instanceModifiedNothing'
+  instanceModifiedNothing = 'instanceModifiedNothing',
+  instanceFilterUpdateRequested = 'instanceFilterUpdateRequested'
 }
 
 export const enum EBlocklistError {

@@ -1,6 +1,7 @@
 import {blocklist, db, instance} from './database/provider.js';
 import {Instance, User} from './database/schema/index.js';
 import {EInstanceError} from './error/keys.js';
+import {build, push} from './filter.js';
 import {isDomain} from './validator/common.js';
 
 export const query = async (id: Instance['i']) => db.tx(async t => {
@@ -99,3 +100,29 @@ export const modify = async (id: Instance['i'], payload: TInstanceModifiablePayl
 		return [EInstanceError.instanceModified] as const;
 	});
 };
+
+/* eslint-disable no-unused-vars */
+export const enum EInstanceStatus {
+	Up = 0,
+	Down = 1,
+	Error = 2,
+	Update = 3
+}
+/* eslint-enable no-unused-vars */
+
+export const refresh = async (id: Instance['i']) => db.tx(async t => {
+	// Get existing blocklists
+	const blocklists = await blocklist(t).find({i_instance: id}).select('address').all();
+
+	// Set status to update
+	await instance(t).update({i: id}, {status: EInstanceStatus.Update});
+
+	// Build
+	const built = await build(blocklists.map(entry => entry.address));
+	const payload = JSON.stringify(built);
+
+	await push(id.toString(), payload);
+
+	// Set status to up
+	await instance(t).update({i: id}, {status: EInstanceStatus.Up});
+});

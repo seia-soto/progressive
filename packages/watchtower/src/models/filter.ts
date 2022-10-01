@@ -1,8 +1,11 @@
 import * as filter from 'filter';
 import got, {Progress} from 'got';
 import {Node} from 'vertical-radix';
-import {filterCache} from '../states/cache.js';
+import fs from 'node:fs/promises';
+import {filterCache, listCache} from '../states/cache.js';
 import derive from './error/derive.js';
+import path from 'node:path';
+import {workspaces} from '../states/workspace.js';
 
 export const downloadLimit = 2 * 1000 * 1000; // 2MB
 
@@ -48,7 +51,7 @@ export const fetcher = got.extend({
 });
 
 export const load = async (url: string) => {
-	const cache = filterCache.get(url);
+	const cache = listCache.get(url);
 
 	if (cache) {
 		return cache.value;
@@ -69,7 +72,7 @@ export const load = async (url: string) => {
 		response = '';
 	}
 
-	filterCache.set(url, response);
+	listCache.set(url, response);
 
 	return response;
 };
@@ -99,4 +102,34 @@ export const build = async (urls: string[]) => {
 	}
 
 	return built;
+};
+
+export const push = async (id: string, filter: string): Promise<void> => {
+	const [error] = await derive(fs.writeFile(path.join(workspaces.filter, id), filter, 'utf-8'));
+
+	if (error) {
+		await fs.mkdir(workspaces.filter, {recursive: true});
+
+		return push(id, filter);
+	}
+
+	filterCache.set(id, filter);
+};
+
+export const pull = async (id: string): Promise<string> => {
+	const entry = filterCache.get(id);
+
+	if (entry) {
+		return entry.value;
+	}
+
+	const [error, buffer] = await derive(fs.readFile(path.join(workspaces.filter, id), 'utf-8'));
+
+	if (error) {
+		await fs.mkdir(workspaces.filter, {recursive: true});
+
+		return pull(id);
+	}
+
+	return buffer.toString();
 };

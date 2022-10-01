@@ -48,3 +48,9 @@ export const RInstanceModifyBody = Type.Object({
 	upstream: Type.Optional(RTInstanceUpstream),
 });
 export const RInstanceModifyResponse = RBaseResponse;
+
+// Refreh
+export const RInstanceRefreshParam = Type.Object({
+	instance: RTInstanceId,
+});
+export const RInstanceRefreshResponse = RBaseResponse;

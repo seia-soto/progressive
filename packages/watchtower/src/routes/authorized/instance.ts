@@ -1,7 +1,8 @@
 import {EInstanceError} from '../../models/error/keys.js';
 import {instance} from '../../models/index.js';
 import {createBaseResponse, RBaseResponse} from '../../models/reply/common.js';
-import {RInstanceCreateResponse, RInstanceModifyBody, RInstanceModifyParam, RInstanceModifyResponse, RInstanceQueryByUserResponse, RInstanceQueryParam, RInstanceQueryResponse, RInstanceRemoveParam, RInstanceRemoveResponse} from '../../models/reply/instance.js';
+import {RInstanceCreateResponse, RInstanceModifyBody, RInstanceModifyParam, RInstanceModifyResponse, RInstanceQueryByUserResponse, RInstanceQueryParam, RInstanceQueryResponse, RInstanceRefreshParam, RInstanceRefreshResponse, RInstanceRemoveParam, RInstanceRemoveResponse} from '../../models/reply/instance.js';
+import {toBeRefreshed} from '../../states/task.js';
 import {TFastifyTypedPluginCallback} from '../../typeRef.js';
 
 export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
@@ -133,6 +134,26 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			response.message.readable = 'You removed the instance.';
 
 			return response;
+		},
+	});
+
+	fastify.route({
+		url: '/:instance/refresh',
+		method: 'GET',
+		schema: {
+			params: RInstanceRefreshParam,
+			response: {
+				200: RInstanceRefreshResponse,
+			},
+		},
+		handler(request, reply) {
+			toBeRefreshed.put(request.params.instance);
+
+			const response = createBaseResponse(EInstanceError.instanceFilterUpdateRequested);
+
+			response.message.readable = 'You requested the instance filter update.';
+
+			reply.send(response);
 		},
 	});
 
