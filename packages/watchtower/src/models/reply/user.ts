@@ -48,7 +48,10 @@ export const RUserModifyBody = Type.Object({
 export const RUserModifyResponse = RBaseResponse;
 
 // Verify
-export const RUserVerifyBody = RUserModifyBody;
+export const RUserVerifyBody = Type.Object({
+	email: RTUserEmail,
+	password: RTUserPassword,
+});
 export const RUserVerifyResponse = RBaseResponse;
 
 // EmailTokenCreate

@@ -14,12 +14,14 @@ export const RTInstanceStatus = Type.Number({
 	minimum: 0,
 });
 export const RTInstanceUpstream = Type.String();
+export const RTInstanceUpdatedAt = Type.Number();
 
 export const RTInstance = Type.Object({
 	i: RTInstanceId,
 	alias: RTInstanceAlias,
 	status: RTInstanceStatus,
 	upstream: RTInstanceUpstream,
+	updated_at: RTInstanceUpdatedAt,
 });
 
 // Create

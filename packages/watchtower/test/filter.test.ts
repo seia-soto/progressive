@@ -1,5 +1,4 @@
 import test from 'ava';
-import {writeFileSync} from 'fs';
 import {build} from '../src/models/filter.js';
 
 test('uAssets', async t => {
@@ -16,9 +15,6 @@ test('uAssets', async t => {
 	];
 
 	const sets = await build(uAssets);
-	const result = JSON.stringify(sets, null, 2);
-
-	writeFileSync('out.json', result);
 
 	t.truthy(sets.negative.find('html-online.com').found);
 	t.log(sets.positive.flatten().length, 'entries added to positives');

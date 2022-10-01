@@ -1,11 +1,11 @@
-import {factory} from '../src/index.js';
-import {TFastifyTyped} from '../src/typeRef.js';
-import untypedTest, {TestFn} from 'ava';
 import {Static} from '@sinclair/typebox';
-import {RUserCreateBody, RUserModifyBody, RUserModifyResponse, RUserQueryResponse, RUserVerifyBody} from '../src/models/reply/user.js';
-import {RBaseResponse} from '../src/models/reply/common.js';
+import untypedTest, {TestFn} from 'ava';
+import {factory} from '../src/index.js';
 import {EInstanceError, EUserError} from '../src/models/error/keys.js';
-import {RInstanceCreateResponse, RInstanceModifyBody, RInstanceModifyResponse, RInstanceQueryByUserResponse} from '../src/models/reply/instance.js';
+import {RBaseResponse} from '../src/models/reply/common.js';
+import {RInstanceCreateResponse, RInstanceModifyBody, RInstanceModifyResponse, RInstanceQueryByUserResponse, RInstanceRefreshResponse, RInstanceRemoveResponse} from '../src/models/reply/instance.js';
+import {RUserCreateBody, RUserModifyBody, RUserModifyResponse, RUserQueryResponse, RUserRemoveBody, RUserRemoveResponse, RUserVerifyBody} from '../src/models/reply/user.js';
+import {TFastifyTyped} from '../src/typeRef.js';
 
 // @ts-expect-error
 const persistence: {
@@ -20,6 +20,12 @@ const test = untypedTest as TestFn<typeof persistence>;
 
 const email = 'user@domain.tld';
 const password = Date.now().toString(36) + 'something long that will over 32 character';
+
+const utils = {
+	sleep: (ms: number) => new Promise(resolve => {
+		setTimeout(() => resolve(null), ms);
+	}),
+};
 
 test.serial.before('bootstrap', async t => {
 	if (!t.context.server) {
@@ -206,4 +212,94 @@ test.serial('PUT /s/a/instance/:instance: modify instance', async t => {
 	})).json<Static<typeof RInstanceQueryByUserResponse>>();
 
 	t.is(modified.payload[0].alias, 'Name');
+});
+
+test.serial('DELETE /s/a/instance/:instance: delete instance', async t => {
+	const response = await t.context.server.inject({
+		url: '/s/a/instance/' + t.context.identifiers.instance,
+		method: 'DELETE',
+		cookies: t.context.cookie,
+	});
+	const json = response.json<Static<typeof RInstanceRemoveResponse>>();
+
+	t.log(json);
+	t.is(json.code, EInstanceError.instanceRemoved);
+
+	// Check removed
+	const modified = (await t.context.server.inject({
+		url: '/s/a/instance',
+		method: 'GET',
+		cookies: t.context.cookie,
+	})).json<Static<typeof RInstanceQueryByUserResponse>>();
+
+	t.is(modified.payload.length, 0);
+
+	// Create for next test
+	await t.context.server.inject({
+		url: '/s/a/instance',
+		method: 'POST',
+		cookies: t.context.cookie,
+	});
+	const created = (await t.context.server.inject({
+		url: '/s/a/instance',
+		method: 'GET',
+		cookies: t.context.cookie,
+	})).json<Static<typeof RInstanceQueryByUserResponse>>();
+
+	t.context.identifiers.instance = created.payload[0].i;
+});
+
+test.serial('GET /s/a/instance/:instance/refresh: refresh instance filters', async t => {
+	const response = await t.context.server.inject({
+		url: '/s/a/instance/' + t.context.identifiers.instance + '/refresh',
+		method: 'GET',
+		cookies: t.context.cookie,
+	});
+	const json = response.json<Static<typeof RInstanceRefreshResponse>>();
+
+	t.log(json);
+	t.is(json.code, EInstanceError.instanceFilterUpdateRequested);
+
+	// Set timeout for building the filter
+	t.timeout(5 * 1000);
+
+	const current = (await t.context.server.inject({
+		url: '/s/a/instance',
+		method: 'GET',
+		cookies: t.context.cookie,
+	})).json<Static<typeof RInstanceQueryByUserResponse>>();
+
+	for (; ;) {
+		const queried = (await t.context.server.inject({
+			url: '/s/a/instance',
+			method: 'GET',
+			cookies: t.context.cookie,
+		})).json<Static<typeof RInstanceQueryByUserResponse>>();
+
+		if (
+			current.payload[0].updated_at !== queried.payload[0].updated_at
+			&& !queried.payload[0].status
+		) {
+			t.log('diff of updated timestamp from saved timestamp in ms:', queried.payload[0].updated_at - current.payload[0].updated_at);
+			t.pass();
+
+			break;
+		}
+
+		await utils.sleep(0.1 * 1000);
+	}
+});
+
+test.serial('DELETE /s/a/user: delete user', async t => {
+	const response = await t.context.server.inject({
+		url: '/s/a/user',
+		method: 'DELETE',
+		cookies: t.context.cookie,
+		payload: {
+			password,
+		} as Static<typeof RUserRemoveBody>,
+	});
+	const json = response.json<Static<typeof RUserRemoveResponse>>();
+
+	t.is(json.code, EUserError.userRemoved);
 });

@@ -15,9 +15,9 @@ export const query = async (id: Instance['i']) => db.tx(async t => {
 });
 
 export const queryByUser = async (user: User['i']) => db.tx(async t => {
-	const many = await instance(t).find({i_user: user}).select('i', 'alias', 'status', 'upstream').all();
+	const many = await instance(t).find({i_user: user}).select('i', 'alias', 'status', 'upstream', 'updated_at').all();
 
-	return [EInstanceError.instanceQueried, many] as const;
+	return [EInstanceError.instanceQueried, many.map(one => ({...one, updated_at: one.updated_at.getTime()}))] as const;
 });
 
 export const create = async (user: User['i']) => db.tx(async t => {
@@ -35,7 +35,7 @@ export const create = async (user: User['i']) => db.tx(async t => {
 		i_user: user,
 		i_instance: one.i,
 		name: 'User',
-		address: 'progressive://internal',
+		address: 'https://ublockorigin.github.io/uAssets/filters/filters.txt',
 		created_at: time,
 		updated_at: time,
 	});
@@ -115,7 +115,7 @@ export const refresh = async (id: Instance['i']) => db.tx(async t => {
 	const blocklists = await blocklist(t).find({i_instance: id}).select('address').all();
 
 	// Set status to update
-	await instance(t).update({i: id}, {status: EInstanceStatus.Update});
+	await instance(t).update({i: id}, {status: EInstanceStatus.Update, updated_at: new Date()});
 
 	// Build
 	const built = await build(blocklists.map(entry => entry.address));
@@ -124,5 +124,5 @@ export const refresh = async (id: Instance['i']) => db.tx(async t => {
 	await push(id.toString(), payload);
 
 	// Set status to up
-	await instance(t).update({i: id}, {status: EInstanceStatus.Up});
+	await instance(t).update({i: id}, {status: EInstanceStatus.Up, updated_at: new Date()});
 });
