@@ -42,8 +42,8 @@ export const RUserRemoveResponse = RBaseResponse;
 
 // Modify
 export const RUserModifyBody = Type.Object({
-	email: RTUserEmail,
-	password: RTUserPassword,
+	email: Type.Optional(RTUserEmail),
+	password: Type.Optional(RTUserPassword),
 });
 export const RUserModifyResponse = RBaseResponse;
 

@@ -11,7 +11,7 @@
     "database:sync": "pg-schema --directory src/models/database/schema",
     "build": "swc src -d out --config-file ../../.swcrc --copy-files",
     "start": "node .",
-    "test": ". scripts/test.sh"
+    "test": ". scripts/test-server.sh"
   },
   "keywords": [],
   "author": "HoJeong Go <seia@outlook.kr>",

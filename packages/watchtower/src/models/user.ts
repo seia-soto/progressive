@@ -50,7 +50,7 @@ export const remove = async (id: User['i']) => db.tx(async t => {
 	return [EUserError.userRemoved] as const;
 });
 
-export type TUserModifiablePayload = Pick<User, 'email' | 'password'>
+export type TUserModifiablePayload = Partial<Pick<User, 'email' | 'password'>>
 
 export const modify = async (id: User['i'], payload: TUserModifiablePayload) => {
 	const modified: Partial<User> = {};
@@ -74,15 +74,15 @@ export const modify = async (id: User['i'], payload: TUserModifiablePayload) => 
 	});
 };
 
-export const verify = async (email: User['email'], password: User['password']) => {
-	const one = await user(db).find({email, email_token: -1}).select('i', 'password').one();
+export const verify = async (email: User['email'], password: User['password']) => db.tx(async t => {
+	const one = await user(t).find({email, email_token: -1}).select('i', 'password').one();
 
 	if (!one) {
 		return [EUserError.userAuthenticationFailed] as const;
 	}
 
 	return [EUserError.userAuthenticated, await validate(password, one.password), one.i] as const;
-};
+});
 
 export const createEmailToken = async (id: User['i']) => db.tx(async t => {
 	const key = Math.floor(Math.random() * Date.now());

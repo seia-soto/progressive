@@ -6,4 +6,4 @@ export DATABASE_URL="postgres://test-user@localhost:5432/test-db"
 pnpm database:apply
 pnpm database:sync
 
-pnpm ava --no-worker-threads
+pnpm ava ./test/server.test.ts

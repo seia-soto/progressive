@@ -1,4 +1,4 @@
-import LeastRecentlyUnused from '../models/cache/leastRecentlyUsed';
+import LeastRecentlyUnused from '../models/cache/leastRecentlyUsed.js';
 
 export const listCache = new LeastRecentlyUnused<string>({
 	live: 60 * 1000,
