@@ -38,7 +38,7 @@ class Queue<T> {
 	}
 
 	async process(): Promise<void> {
-		if (this.parallel > this.processing) {
+		if (this.parallel <= this.processing) {
 			return;
 		}
 
