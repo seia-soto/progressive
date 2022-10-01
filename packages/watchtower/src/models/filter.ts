@@ -1,13 +1,14 @@
-import got, {Progress} from 'got';
 import * as filter from 'filter';
-import derive from './error/derive.js';
+import got, {Progress} from 'got';
 import {Node} from 'vertical-radix';
+import {filterCache} from '../states/cache.js';
+import derive from './error/derive.js';
 
 export const downloadLimit = 2 * 1000 * 1000; // 2MB
 
 export const fetcher = got.extend({
 	headers: {
-		'user-agent': 'seia-soto/progressive (a DNS server)',
+		'user-agent': 'seia-soto/progressive (v1)',
 	},
 	maxRedirects: 4,
 	timeout: {
@@ -47,6 +48,12 @@ export const fetcher = got.extend({
 });
 
 export const load = async (url: string) => {
+	const cache = filterCache.get(url);
+
+	if (cache) {
+		return cache.value;
+	}
+
 	const [, head] = await derive(fetcher.head(url));
 
 	if (
@@ -56,9 +63,15 @@ export const load = async (url: string) => {
 		return '';
 	}
 
-	const [, response] = await derive(fetcher.get(url).text());
+	let [, response] = await derive(fetcher.get(url).text());
 
-	return response || '';
+	if (!response) {
+		response = '';
+	}
+
+	filterCache.set(url, response);
+
+	return response;
 };
 
 export const build = async (urls: string[]) => {
