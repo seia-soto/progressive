@@ -77,7 +77,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 				400: RBaseResponse,
 			},
 		},
-		async handler(request, reply) {
+		async handler(request) {
 			const [code] = await blocklist.modify(parseInt(request.params.blocklist, 10), request.body);
 			const response = createBaseResponse(code);
 
@@ -91,14 +91,6 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 				case EBlocklistError.blocklistModifiedNothing: {
 					response.message.identifiable = 'You requested modification but nothing actually modified.';
 					response.message.readable = 'You modified the blocklist.';
-
-					break;
-				}
-
-				case EBlocklistError.blocklistAddressValidationFailed: {
-					reply.code(400);
-
-					response.message.readable = 'The format of blocklist address should valid for url.';
 
 					break;
 				}

@@ -1,7 +1,6 @@
 import {blocklist, db} from './database/provider.js';
 import {Blocklist, Instance, User} from './database/schema/index.js';
 import {EBlocklistError} from './error/keys.js';
-import {isUrl} from './validator/common.js';
 
 export const queryByInstance = async (instance: Instance['i']) => db.tx(async t => {
 	const many = await blocklist(t).find({i_instance: instance}).select('i', 'name', 'address').all();
@@ -42,10 +41,6 @@ export const modify = async (id: Blocklist['i'], payload: TBlocklistModifiablePa
 	}
 
 	if (payload.address) {
-		if (!isUrl(payload.address)) {
-			return [EBlocklistError.blocklistAddressValidationFailed] as const;
-		}
-
 		modified.address = payload.address;
 	}
 

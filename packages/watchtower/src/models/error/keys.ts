@@ -11,7 +11,6 @@ export const enum EDatabaseError {
 export const enum EUserError {
   userCreated = 'userCreated',
   userUniquenessCheckFailed = 'userUniquenessCheckFailed',
-  userEmailValidationFailed = 'userEmailValidationFailed',
   userQueried = 'userQueried',
   userQueryFailed = 'userQueryFailed',
   userRemoved = 'userRemoved',
@@ -41,6 +40,5 @@ export const enum EBlocklistError {
   blocklistQueried = 'blocklistQueried',
   blocklistRemoved = 'blocklistRemoved',
   blocklistModified = 'blocklistModified',
-  blocklistAddressValidationFailed = 'blocklistAddressValidationFailed',
   blocklistModifiedNothing = 'blocklistModifiedNothing'
 }

@@ -4,7 +4,6 @@ import User from './database/schema/user.js';
 import derive from './error/derive.js';
 import {EUserError} from './error/keys.js';
 import {encode, validate} from './hash.js';
-import {isEmail} from './validator/common.js';
 
 export const query = async (id: User['i']) => db.tx(async t => {
 	const one = await user(t).find({i: id}).select('i', 'email').one();
@@ -16,31 +15,25 @@ export const query = async (id: User['i']) => db.tx(async t => {
 	return [EUserError.userQueried, one] as const;
 });
 
-export const create = async (email: User['email'], password: User['password']) => {
-	if (!isEmail(email)) {
-		return [EUserError.userEmailValidationFailed] as const;
+export const create = async (email: User['email'], password: User['password']) => db.tx(async t => {
+	const existing = await user(t).count({email});
+
+	if (existing) {
+		return [EUserError.userUniquenessCheckFailed];
 	}
 
-	return db.tx(async t => {
-		const existing = await user(t).count({email});
+	const time = new Date();
 
-		if (existing) {
-			return [EUserError.userUniquenessCheckFailed];
-		}
-
-		const time = new Date();
-
-		const hash = await encode(password);
-		const [one] = await user(t).insert({
-			email,
-			email_token: -1,
-			password: hash,
-			created_at: time,
-		});
-
-		return [EUserError.userCreated, one] as const;
+	const hash = await encode(password);
+	const [one] = await user(t).insert({
+		email,
+		email_token: -1,
+		password: hash,
+		created_at: time,
 	});
-};
+
+	return [EUserError.userCreated, one] as const;
+});
 
 export const remove = async (id: User['i']) => db.tx(async t => {
 	await blocklist(t).delete({i_user: id});

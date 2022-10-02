@@ -27,15 +27,6 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 					break;
 				}
 
-				case EUserError.userEmailValidationFailed: {
-					reply.code(400);
-
-					response.message.identifiable = 'Your email format is not valid.';
-					response.message.readable = 'Please fix your email format or write again to fix typing error.';
-
-					break;
-				}
-
 				case EUserError.userUniquenessCheckFailed: {
 					reply.code(400);
 
