@@ -1,5 +1,5 @@
 import test from 'ava';
-import {build} from '../src/models/filter.js';
+import {build} from '../src/models/filter/loader.js';
 
 test('uAssets', async t => {
 	const uAssets = [
