@@ -1,9 +1,6 @@
 import got, {Progress} from 'got';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import fss from 'node:fs';
 import {filterCache} from '../../states/cache.js';
-import {workspaces} from '../../states/workspace.js';
+import {EWorkspaceKey, read, write} from '../../states/workspace.js';
 
 export const downloadLimit = 2 * 1000 * 1000; // 2MB
 
@@ -48,31 +45,22 @@ export const fetcher = got.extend({
 	},
 });
 
-export const push = async (id: string, filter: string) => {
-	const to = path.join(workspaces.filter, id);
+export const pull = async (id: string) => {
+	const cached = filterCache.get(id);
 
-	if (!fss.existsSync(workspaces.filter)) {
-		await fs.mkdir(workspaces.filter, {recursive: true});
-		await fs.writeFile(to, '', 'utf-8');
+	if (cached) {
+		return cached.value;
 	}
 
-	await fs.writeFile(to, filter, 'utf-8');
+	const value = await read(EWorkspaceKey.filterUser, id);
 
-	filterCache.set(id, filter);
+	filterCache.set(id, value);
+
+	return value;
 };
 
-export const pull = async (id: string) => {
-	const entry = filterCache.get(id);
+export const push = async (id: string, filter: string) => {
+	await write(EWorkspaceKey.filterUser, id, filter);
 
-	if (entry) {
-		return entry.value;
-	}
-
-	if (!fss.existsSync(workspaces.filter)) {
-		await fs.mkdir(workspaces.filter, {recursive: true});
-	}
-
-	const out = await fs.readFile(path.join(workspaces.filter, id), 'utf-8');
-
-	return out;
+	filterCache.set(id, filter);
 };

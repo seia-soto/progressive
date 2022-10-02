@@ -1,28 +1,22 @@
-import fss from 'node:fs';
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import {listCache} from '../../states/cache.js';
-import {workspaces} from '../../states/workspace.js';
+import {EWorkspaceKey, read, write} from '../../states/workspace.js';
 
 export const pull = async (id: string) => {
-	const to = path.join(workspaces.user, id);
+	const cached = listCache.get(id);
 
-	if (!fss.existsSync(workspaces.user)) {
-		await fs.mkdir(workspaces.user, {recursive: true});
-		await fs.writeFile(to, '', 'utf-8');
+	if (cached) {
+		return cached.value;
 	}
 
-	const out = await fs.readFile(to, 'utf-8');
+	const value = await read(EWorkspaceKey.filterUser, id);
 
-	return out;
+	listCache.set(id, value);
+
+	return value;
 };
 
 export const push = async (id: string, filter: string) => {
-	if (!fss.existsSync(workspaces.user)) {
-		await fs.mkdir(workspaces.user, {recursive: true});
-	}
-
-	await fs.writeFile(path.join(workspaces.user, id), filter, 'utf-8');
+	await write(EWorkspaceKey.filterUser, id, filter);
 
 	listCache.set(id, filter);
 };
