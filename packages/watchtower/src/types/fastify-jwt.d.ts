@@ -2,7 +2,8 @@ import '@fastify/jwt';
 
 declare module '@fastify/jwt' {
   interface IFastifyJWTUser {
-    i: number
+    i: number,
+    ref: number
   }
 
   export interface FastifyJWT {

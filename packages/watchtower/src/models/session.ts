@@ -1,11 +1,10 @@
 import {ConnectionPool, Transaction} from '@databases/pg';
-import crypto from 'node:crypto';
 import {db, session} from './database/provider.js';
 import {Session, User} from './database/schema/index.js';
 import {ESessionError} from './error/keys.js';
 
-export const isOwnedByUser = async (user: User['i'], id: Session['i'], t: Transaction | ConnectionPool) => {
-	const count = await session(t).count({i: id, i_user: user});
+export const isOwnedByUser = async (user: User['i'], ref: number, t: Transaction | ConnectionPool = db) => {
+	const count = await session(t).count({i_user: user, i: ref});
 
 	return count;
 };
@@ -17,13 +16,10 @@ export const queryByUser = async (user: User['i']) => db.tx(async t => {
 	return [ESessionError.sessionQueried, many];
 });
 
-export const create = async (user: User['i'], token: string, name: string) => db.tx(async t => {
-	const hash = crypto.createHash('md5').update(token).digest('hex');
-
+export const create = async (user: User['i'], name: string) => db.tx(async t => {
 	const [one] = await session(t).insert({
 		i_user: user,
 		name,
-		token: hash,
 		created_at: new Date(),
 	});
 

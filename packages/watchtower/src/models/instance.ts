@@ -45,7 +45,7 @@ export const create = async (user: User['i']) => db.tx(async t => {
 		i_user: user,
 		i_instance: one.i,
 		name: 'User',
-		address: 'progressive://i' + one.i,
+		address: 'progressive://' + one.i,
 		type: EBlocklistType.User,
 		created_at: time,
 		updated_at: time,

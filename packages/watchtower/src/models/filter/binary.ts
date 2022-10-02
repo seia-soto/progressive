@@ -52,7 +52,7 @@ export const pull = async (id: string) => {
 		return cached.value;
 	}
 
-	const value = await read(EWorkspaceKey.filterUser, id);
+	const value = await read(EWorkspaceKey.filterCompiled, id);
 
 	filterCache.set(id, value);
 
@@ -60,7 +60,7 @@ export const pull = async (id: string) => {
 };
 
 export const push = async (id: string, filter: string) => {
-	await write(EWorkspaceKey.filterUser, id, filter);
+	await write(EWorkspaceKey.filterCompiled, id, filter);
 
 	filterCache.set(id, filter);
 };

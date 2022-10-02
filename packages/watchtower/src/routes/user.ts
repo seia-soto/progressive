@@ -1,5 +1,5 @@
 import {EUserError} from '../models/error/keys.js';
-import {user} from '../models/index.js';
+import {session, user} from '../models/index.js';
 import {createBaseResponse, RBaseResponse} from '../models/reply/common.js';
 import {RUserCreateBody, RUserCreateResponse, RUserEmailTokenVerifyQuery, RUserEmailTokenVerifyResponse, RUserVerifyBody, RUserVerifyResponse} from '../models/reply/user.js';
 import {TFastifyTypedPluginCallback} from '../typeRef.js';
@@ -62,7 +62,9 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 				return response;
 			}
 
-			reply.setCookie('a', await reply.jwtSign({i}));
+			const [, one] = await session.create(i, request.headers['user-agent'] ?? 'Unknown');
+
+			reply.setCookie('a', await reply.jwtSign({i, ref: one.i}));
 
 			response.message.readable = 'You signed in.';
 

@@ -23,6 +23,7 @@ export const factory = async () => {
 		},
 		verify: {
 			allowedIss: iss,
+			cache: 3600,
 		},
 		cookie: {
 			cookieName: 'a',

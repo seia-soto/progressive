@@ -12,9 +12,8 @@ CREATE TABLE "session" (
 	i SERIAL PRIMARY KEY NOT NULL,
 	i_user SERIAL NOT NULL,
 	name TEXT NOT NULL,
-	token TEXT NOT NULL,
 	created_at TIMESTAMP NOT NULL,
-	UNIQUE(token),
+	UNIQUE(i),
 	CONSTRAINT for_user FOREIGN KEY(i_user) REFERENCES "user"(i)
 );
 

@@ -217,13 +217,6 @@
         "hasDefault": false,
         "typeId": 25,
         "typeName": "TEXT"
-      },
-      {
-        "name": "token",
-        "isNullable": false,
-        "hasDefault": false,
-        "typeId": 25,
-        "typeName": "TEXT"
       }
     ]
   },
