@@ -13,6 +13,7 @@ export const RTBlocklistName = Type.String({
 export const RTBlocklistAddress = Type.String({
 	minLength: 'http://a.b'.length,
 	maxLength: 2048,
+	format: 'url',
 });
 
 export const RTBlocklist = Type.Object({

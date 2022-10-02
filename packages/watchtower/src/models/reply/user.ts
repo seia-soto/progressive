@@ -8,6 +8,7 @@ export const RTUserId = Type.Number({
 export const RTUserEmail = Type.String({
 	minLength: 'a@b.c'.length,
 	maxLength: 320,
+	format: 'email',
 });
 export const RTUserPassword = Type.String({
 	minLength: 32,
