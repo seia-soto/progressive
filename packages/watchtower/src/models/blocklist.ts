@@ -4,9 +4,9 @@ import {Blocklist, Instance, User} from './database/schema/index.js';
 import {EBlocklistError} from './error/keys.js';
 
 export const isOwnedByUser = async (user: User['i'], id: Blocklist['i'], t: Transaction | ConnectionPool = db) => {
-	const isOwnedByUser = await blocklist(t).count({i: id, i_user: user});
+	const count = await blocklist(t).count({i: id, i_user: user});
 
-	return isOwnedByUser;
+	return count;
 };
 
 // Service

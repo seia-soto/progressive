@@ -44,3 +44,10 @@ export const enum EBlocklistError {
   blocklistModifiedNothing = 'blocklistModifiedNothing',
   blocklistNotOwnedByUser = 'blocklistNotOwnedByUser'
 }
+
+export const enum ESessionError {
+  sessionCreated = 'sessionCreated',
+  sessionQueried = 'sessionQueried',
+  sessionRemoved = 'sessionRemoved',
+  sessionNotOwnedByUser = 'sessionNotOwnedByUser'
+}

@@ -8,9 +8,9 @@ import {build} from './filter/loader.js';
 import {isDomain} from './validator/common.js';
 
 export const isOwnedByUser = async (user: User['i'], id: Instance['i'], t: Transaction | ConnectionPool = db) => {
-	const isOwnedByUser = await instance(t).count({i: id, i_user: user});
+	const count = await instance(t).count({i: id, i_user: user});
 
-	return isOwnedByUser;
+	return count;
 };
 
 // Service

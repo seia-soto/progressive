@@ -19,6 +19,7 @@ export const dispose = async () => {
 
 export const {
 	user,
+	session,
 	instance,
 	blocklist,
 } = tables<Schema>({

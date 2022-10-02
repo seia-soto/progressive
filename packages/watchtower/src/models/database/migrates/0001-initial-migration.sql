@@ -8,6 +8,16 @@ CREATE TABLE "user" (
 	UNIQUE(i)
 );
 
+CREATE TABLE "session" (
+	i SERIAL PRIMARY KEY NOT NULL,
+	i_user SERIAL NOT NULL,
+	name TEXT NOT NULL,
+	token TEXT NOT NULL,
+	created_at TIMESTAMP NOT NULL,
+	UNIQUE(token),
+	CONSTRAINT for_user FOREIGN KEY(i_user) REFERENCES "user"(i)
+);
+
 CREATE TABLE "instance" (
 	i SERIAL PRIMARY KEY NOT NULL,
 	i_user SERIAL NOT NULL,

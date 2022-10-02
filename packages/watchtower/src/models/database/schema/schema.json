@@ -188,6 +188,46 @@
     ]
   },
   {
+    "name": "session",
+    "columns": [
+      {
+        "name": "created_at",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 1114,
+        "typeName": "TIMESTAMP"
+      },
+      {
+        "name": "i",
+        "isNullable": false,
+        "hasDefault": true,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "i_user",
+        "isNullable": false,
+        "hasDefault": true,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
+        "name": "name",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 25,
+        "typeName": "TEXT"
+      },
+      {
+        "name": "token",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 25,
+        "typeName": "TEXT"
+      }
+    ]
+  },
+  {
     "name": "user",
     "columns": [
       {
