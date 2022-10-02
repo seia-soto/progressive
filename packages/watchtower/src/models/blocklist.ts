@@ -2,6 +2,7 @@ import {blocklist, db} from './database/provider.js';
 import {Blocklist, Instance, User} from './database/schema/index.js';
 import {EBlocklistError} from './error/keys.js';
 
+// Service
 /* eslint-disable no-unused-vars */
 export const enum EBlocklistType {
 	Remote = 0,

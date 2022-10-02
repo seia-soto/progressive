@@ -1,3 +1,4 @@
+import {ConnectionPool, Transaction} from '@databases/pg';
 import {EBlocklistType} from './blocklist.js';
 import {blocklist, db, instance} from './database/provider.js';
 import {Instance, User} from './database/schema/index.js';
@@ -6,6 +7,13 @@ import {push} from './filter/binary.js';
 import {build} from './filter/loader.js';
 import {isDomain} from './validator/common.js';
 
+export const isOwnedByUser = async (user: User['i'], id: Instance['i'], t: Transaction | ConnectionPool = db) => {
+	const isOwnedByUser = await instance(t).count({i: id, i_user: user});
+
+	return isOwnedByUser;
+};
+
+// Service
 export const query = async (id: Instance['i']) => db.tx(async t => {
 	const one = await instance(t).find({i: id}).select('i', 'alias', 'status', 'upstream').one();
 
@@ -46,7 +54,11 @@ export const create = async (user: User['i']) => db.tx(async t => {
 	return [EInstanceError.instanceCreated, one] as const;
 });
 
-export const remove = async (id: Instance['i']) => db.tx(async t => {
+export const remove = async (user: User['i'], id: Instance['i']) => db.tx(async t => {
+	if (!isOwnedByUser(user, id, t)) {
+		return [EInstanceError.instanceNotOwnedByUser] as const;
+	}
+
 	await blocklist(t).delete({i_instance: id});
 	await instance(t).delete({i: id});
 
@@ -55,7 +67,11 @@ export const remove = async (id: Instance['i']) => db.tx(async t => {
 
 export type TInstanceModifiablePayload = Partial<Pick<Instance, 'alias' | 'upstream'>>
 
-export const modify = async (id: Instance['i'], payload: TInstanceModifiablePayload) => {
+export const modify = async (user: User['i'], id: Instance['i'], payload: TInstanceModifiablePayload) => db.tx(async t => {
+	if (!isOwnedByUser(user, id, t)) {
+		return [EInstanceError.instanceNotOwnedByUser] as const;
+	}
+
 	const time = new Date();
 	const modified: Partial<Instance> = {
 		updated_at: time,
@@ -81,7 +97,7 @@ export const modify = async (id: Instance['i'], payload: TInstanceModifiablePayl
 
 			if (
 				(protocol === 'dns' && /\d+\.\d+\.\d+\.\d+/.test(address))
-        || ((protocol === 'dot' || protocol === 'doh') && isDomain(address))
+					|| ((protocol === 'dot' || protocol === 'doh') && isDomain(address))
 			) {
 				modified.upstream += lines[i] + '\n';
 				validCounts++;
@@ -97,12 +113,10 @@ export const modify = async (id: Instance['i'], payload: TInstanceModifiablePayl
 		return [EInstanceError.instanceModifiedNothing] as const;
 	}
 
-	return db.tx(async t => {
-		await instance(t).update({i: id}, modified);
+	await instance(t).update({i: id}, modified);
 
-		return [EInstanceError.instanceModified] as const;
-	});
-};
+	return [EInstanceError.instanceModified] as const;
+});
 
 /* eslint-disable no-unused-vars */
 export const enum EInstanceStatus {

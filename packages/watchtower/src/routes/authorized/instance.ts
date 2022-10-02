@@ -88,7 +88,7 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			},
 		},
 		async handler(request, reply) {
-			const [code] = await instance.modify(parseInt(request.params.instance, 10), request.body);
+			const [code] = await instance.modify(request.user.i, parseInt(request.params.instance, 10), request.body);
 			const response = createBaseResponse(code);
 
 			switch (code) {
@@ -112,6 +112,14 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 
 					break;
 				}
+
+				case EInstanceError.instanceNotOwnedByUser: {
+					reply.code(400);
+
+					response.message.readable = 'You are not the owner of this instance or instance not found.';
+
+					break;
+				}
 			}
 
 			return response;
@@ -128,8 +136,14 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			},
 		},
 		async handler(request) {
-			const [code] = await instance.remove(parseInt(request.params.instance, 10));
+			const [code] = await instance.remove(request.user.i, parseInt(request.params.instance, 10));
 			const response = createBaseResponse(code);
+
+			if (code === EInstanceError.instanceNotOwnedByUser) {
+				response.message.readable = 'You are not the owner of this instance or instance not found.';
+
+				return response;
+			}
 
 			response.message.readable = 'You removed the instance.';
 

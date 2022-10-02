@@ -5,6 +5,7 @@ import derive from './error/derive.js';
 import {EUserError} from './error/keys.js';
 import {encode, validate} from './hash.js';
 
+// Service
 export const query = async (id: User['i']) => db.tx(async t => {
 	const one = await user(t).find({i: id}).select('i', 'email').one();
 
