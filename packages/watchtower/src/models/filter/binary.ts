@@ -1,11 +1,9 @@
-import * as filter from 'filter';
 import got, {Progress} from 'got';
-import {Node} from 'vertical-radix';
 import fs from 'node:fs/promises';
-import {filterCache, listCache} from '../states/cache.js';
-import derive from './error/derive.js';
 import path from 'node:path';
-import {workspaces} from '../states/workspace.js';
+import {filterCache} from '../../states/cache.js';
+import {workspaces} from '../../states/workspace.js';
+import derive from '../error/derive.js';
 
 export const downloadLimit = 2 * 1000 * 1000; // 2MB
 
@@ -50,60 +48,6 @@ export const fetcher = got.extend({
 	},
 });
 
-export const load = async (url: string) => {
-	const cache = listCache.get(url);
-
-	if (cache) {
-		return cache.value;
-	}
-
-	const [, head] = await derive(fetcher.head(url));
-
-	if (
-		head
-		&& parseInt(head.headers['content-length'] ?? '', 10) > downloadLimit
-	) {
-		return '';
-	}
-
-	let [, response] = await derive(fetcher.get(url).text());
-
-	if (!response) {
-		response = '';
-	}
-
-	listCache.set(url, response);
-
-	return response;
-};
-
-export const build = async (urls: string[]) => {
-	const built = {
-		positive: new Node(),
-		negative: new Node(),
-	};
-	const files = await Promise.all(urls.map(url => load(url)));
-
-	for (let i = 0; i < files.length; i++) {
-		files[i]
-			.split('\n')
-			.map(line => filter.parseDNS(line))
-			.forEach(entry => {
-				if (!entry) {
-					return;
-				}
-
-				if (entry.type === filter.EFilterType.StaticException) {
-					built.negative.insert(entry.pattern);
-				} else {
-					built.positive.insert(entry.pattern);
-				}
-			});
-	}
-
-	return built;
-};
-
 export const push = async (id: string, filter: string): Promise<void> => {
 	const [error] = await derive(fs.writeFile(path.join(workspaces.filter, id), filter, 'utf-8'));
 
@@ -123,7 +67,7 @@ export const pull = async (id: string): Promise<string> => {
 		return entry.value;
 	}
 
-	const [error, buffer] = await derive(fs.readFile(path.join(workspaces.filter, id), 'utf-8'));
+	const [error, out] = await derive(fs.readFile(path.join(workspaces.filter, id), 'utf-8'));
 
 	if (error) {
 		await fs.mkdir(workspaces.filter, {recursive: true});
@@ -131,5 +75,5 @@ export const pull = async (id: string): Promise<string> => {
 		return pull(id);
 	}
 
-	return buffer.toString();
+	return out;
 };

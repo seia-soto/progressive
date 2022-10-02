@@ -1,11 +1,12 @@
 import {blocklist, db, instance} from './database/provider.js';
 import {Instance, User} from './database/schema/index.js';
 import {EInstanceError} from './error/keys.js';
-import {build, push} from './filter.js';
+import {push} from './filter/binary.js';
+import {build} from './filter/loader.js';
 import {isDomain} from './validator/common.js';
 
 export const query = async (id: Instance['i']) => db.tx(async t => {
-	const one = await instance(t).find({i: id}).select('i', 'alias', 'status', 'upstream');
+	const one = await instance(t).find({i: id}).select('i', 'alias', 'status', 'upstream').one();
 
 	if (!one) {
 		return [EInstanceError.instanceQueryFailed] as const;
@@ -118,7 +119,10 @@ export const refresh = async (id: Instance['i']) => db.tx(async t => {
 	await instance(t).update({i: id}, {status: EInstanceStatus.Update, updated_at: new Date()});
 
 	// Build
-	const built = await build(blocklists.map(entry => entry.address));
+	const built = await build([
+		...blocklists.map(entry => entry.address),
+		'progressive://' + id, // Add user filter
+	]);
 	const payload = JSON.stringify(built);
 
 	await push(id.toString(), payload);

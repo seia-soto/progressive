@@ -4,4 +4,5 @@ export const shared = path.join(process.cwd(), 'ws');
 
 export const workspaces = {
 	filter: path.join(shared, 'filter'),
+	user: path.join(shared, 'user'),
 };
