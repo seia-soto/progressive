@@ -41,5 +41,6 @@ export const enum EBlocklistError {
   blocklistQueried = 'blocklistQueried',
   blocklistRemoved = 'blocklistRemoved',
   blocklistModified = 'blocklistModified',
-  blocklistModifiedNothing = 'blocklistModifiedNothing'
+  blocklistModifiedNothing = 'blocklistModifiedNothing',
+  blocklistNotOwnedByUser = 'blocklistNotOwnedByUser'
 }

@@ -55,7 +55,7 @@ export const create = async (user: User['i']) => db.tx(async t => {
 });
 
 export const remove = async (user: User['i'], id: Instance['i']) => db.tx(async t => {
-	if (!isOwnedByUser(user, id, t)) {
+	if (!await isOwnedByUser(user, id, t)) {
 		return [EInstanceError.instanceNotOwnedByUser] as const;
 	}
 
@@ -68,7 +68,7 @@ export const remove = async (user: User['i'], id: Instance['i']) => db.tx(async 
 export type TInstanceModifiablePayload = Partial<Pick<Instance, 'alias' | 'upstream'>>
 
 export const modify = async (user: User['i'], id: Instance['i'], payload: TInstanceModifiablePayload) => db.tx(async t => {
-	if (!isOwnedByUser(user, id, t)) {
+	if (!await isOwnedByUser(user, id, t)) {
 		return [EInstanceError.instanceNotOwnedByUser] as const;
 	}
 
