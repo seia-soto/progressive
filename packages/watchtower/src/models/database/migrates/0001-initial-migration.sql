@@ -26,6 +26,7 @@ CREATE TABLE "blocklist" (
 	i_instance SERIAL NOT NULL,
 	name TEXT NOT NULL,
 	address TEXT NOT NULL,
+	type INT NOT NULL,
 	created_at TIMESTAMP NOT NULL,
 	updated_at TIMESTAMP NOT NULL,
 	UNIQUE(i),

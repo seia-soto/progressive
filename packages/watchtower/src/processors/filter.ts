@@ -6,6 +6,8 @@ export const refreshProcessor = async (id: Instance['i']) => {
 	const [error] = await derive(refresh(id));
 
 	if (error) {
+		console.error(error);
+
 		return true;
 	}
 

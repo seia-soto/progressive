@@ -1,3 +1,4 @@
+import {EBlocklistType} from './blocklist.js';
 import {blocklist, db, instance} from './database/provider.js';
 import {Instance, User} from './database/schema/index.js';
 import {EInstanceError} from './error/keys.js';
@@ -36,7 +37,8 @@ export const create = async (user: User['i']) => db.tx(async t => {
 		i_user: user,
 		i_instance: one.i,
 		name: 'User',
-		address: 'https://ublockorigin.github.io/uAssets/filters/filters.txt',
+		address: 'progressive://i' + one.i,
+		type: EBlocklistType.User,
 		created_at: time,
 		updated_at: time,
 	});
@@ -105,9 +107,9 @@ export const modify = async (id: Instance['i'], payload: TInstanceModifiablePayl
 /* eslint-disable no-unused-vars */
 export const enum EInstanceStatus {
 	Up = 0,
-	Down = 1,
-	Error = 2,
-	Update = 3
+	Down,
+	Error,
+	Update
 }
 /* eslint-enable no-unused-vars */
 
@@ -119,10 +121,7 @@ export const refresh = async (id: Instance['i']) => db.tx(async t => {
 	await instance(t).update({i: id}, {status: EInstanceStatus.Update, updated_at: new Date()});
 
 	// Build
-	const built = await build([
-		...blocklists.map(entry => entry.address),
-		'progressive://' + id, // Add user filter
-	]);
+	const built = await build(blocklists.map(entry => entry.address));
 	const payload = JSON.stringify(built);
 
 	await push(id.toString(), payload);

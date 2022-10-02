@@ -1,9 +1,9 @@
 import got, {Progress} from 'got';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import fss from 'node:fs';
 import {filterCache} from '../../states/cache.js';
 import {workspaces} from '../../states/workspace.js';
-import derive from '../error/derive.js';
 
 export const downloadLimit = 2 * 1000 * 1000; // 2MB
 
@@ -48,32 +48,31 @@ export const fetcher = got.extend({
 	},
 });
 
-export const push = async (id: string, filter: string): Promise<void> => {
-	const [error] = await derive(fs.writeFile(path.join(workspaces.filter, id), filter, 'utf-8'));
+export const push = async (id: string, filter: string) => {
+	const to = path.join(workspaces.filter, id);
 
-	if (error) {
+	if (!fss.existsSync(workspaces.filter)) {
 		await fs.mkdir(workspaces.filter, {recursive: true});
-
-		return push(id, filter);
+		await fs.writeFile(to, '', 'utf-8');
 	}
+
+	await fs.writeFile(to, filter, 'utf-8');
 
 	filterCache.set(id, filter);
 };
 
-export const pull = async (id: string): Promise<string> => {
+export const pull = async (id: string) => {
 	const entry = filterCache.get(id);
 
 	if (entry) {
 		return entry.value;
 	}
 
-	const [error, out] = await derive(fs.readFile(path.join(workspaces.filter, id), 'utf-8'));
-
-	if (error) {
+	if (!fss.existsSync(workspaces.filter)) {
 		await fs.mkdir(workspaces.filter, {recursive: true});
-
-		return pull(id);
 	}
+
+	const out = await fs.readFile(path.join(workspaces.filter, id), 'utf-8');
 
 	return out;
 };

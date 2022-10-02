@@ -11,6 +11,7 @@
     "database:sync": "pg-schema --directory src/models/database/schema",
     "build": "swc src -d out --config-file ../../.swcrc --copy-files",
     "start": "node .",
+    "start:unsafe": "SHUTDOWN_UNSAFE=1 node .",
     "test": ". scripts/test-server.sh"
   },
   "keywords": [],

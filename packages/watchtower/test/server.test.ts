@@ -1,10 +1,13 @@
 import {Static} from '@sinclair/typebox';
 import untypedTest, {TestFn} from 'ava';
+import fss from 'node:fs';
+import fs from 'node:fs/promises';
 import {factory} from '../src/index.js';
 import {EInstanceError, EUserError} from '../src/models/error/keys.js';
 import {RBaseResponse} from '../src/models/reply/common.js';
 import {RInstanceCreateResponse, RInstanceModifyBody, RInstanceModifyResponse, RInstanceQueryByUserResponse, RInstanceRefreshResponse, RInstanceRemoveResponse} from '../src/models/reply/instance.js';
 import {RUserCreateBody, RUserModifyBody, RUserModifyResponse, RUserQueryResponse, RUserRemoveBody, RUserRemoveResponse, RUserVerifyBody} from '../src/models/reply/user.js';
+import {shared} from '../src/states/workspace.js';
 import {TFastifyTyped} from '../src/typeRef.js';
 
 // @ts-expect-error
@@ -47,6 +50,12 @@ test.serial.before('bootstrap', async t => {
 		t.context.identifiers = {
 			instance: -1,
 		};
+	}
+
+	if (fss.existsSync(shared)) {
+		t.log('cleaning up the workspace directory');
+
+		await fs.rm(shared, {recursive: true});
 	}
 });
 

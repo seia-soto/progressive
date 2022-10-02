@@ -1,46 +1,38 @@
 import * as filter from 'filter';
 import {Node} from 'vertical-radix';
 import {listCache} from '../../states/cache.js';
-import derive from '../error/derive.js';
+import retry from '../error/retry.js';
 import {downloadLimit, fetcher} from './binary.js';
 import {pull} from './user.js';
 
-export const loadRemote = async (url: string) => {
+export const loadRemote = async (url: string) => retry<string>(async () => {
 	const cache = listCache.get(url);
 
 	if (cache) {
-		return cache.value;
-	}
-
-	const [, head] = await derive(fetcher.head(url));
-
-	if (
-		head
-    && parseInt(head.headers['content-length'] ?? '', 10) > downloadLimit
-	) {
 		return '';
 	}
 
-	let [, response] = await derive(fetcher.get(url).text());
+	const head = await fetcher.head(url);
 
-	if (!response) {
-		response = '';
+	if (
+		head
+		&& parseInt(head.headers['content-length'] ?? '', 10) > downloadLimit
+	) {
+		throw new Error('You exceeded the download limit!');
 	}
+
+	const response = await fetcher.get(url).text();
 
 	listCache.set(url, response);
 
 	return response;
-};
+}, 2);
 
-export const loadLocal = async (id: string): Promise<string> => {
-	const [error, out] = await derive(pull(id));
-
-	if (error) {
-		return '';
-	}
+export const loadLocal = async (id: string) => retry<string>(async () => {
+	const out = await pull(id);
 
 	return out;
-};
+}, 2);
 
 export const load = async (url: string) => {
 	const [protocol, rest] = url.split('://');
@@ -56,7 +48,10 @@ export const load = async (url: string) => {
 		}
 
 		default: {
-			return '';
+			return {
+				success: false,
+				did: [new Error('Unknown protocol!')],
+			} as const;
 		}
 	}
 };
@@ -67,9 +62,11 @@ export const build = async (urls: string[]) => {
 		negative: new Node(),
 	};
 	const files = await Promise.all(urls.map(url => load(url)));
+	const refined = files
+		.filter((file): file is { success: true, did: string } => file.success);
 
-	for (let i = 0; i < files.length; i++) {
-		files[i]
+	for (let i = 0; i < refined.length; i++) {
+		refined[i].did
 			.split('\n')
 			.map(line => filter.parseDNS(line))
 			.forEach(entry => {

@@ -2,20 +2,32 @@ import {blocklist, db} from './database/provider.js';
 import {Blocklist, Instance, User} from './database/schema/index.js';
 import {EBlocklistError} from './error/keys.js';
 
+/* eslint-disable no-unused-vars */
+export const enum EBlocklistType {
+	Remote = 0,
+	User
+}
+/* eslint-enable no-unused-vars */
+
 export const queryByInstance = async (instance: Instance['i']) => db.tx(async t => {
-	const many = await blocklist(t).find({i_instance: instance}).select('i', 'name', 'address').all();
+	const many = await blocklist(t).find({i_instance: instance}).select('i', 'name', 'address', 'type').all();
 
 	return [EBlocklistError.blocklistQueried, many] as const;
 });
 
-export const create = async (user: User['i'], instance: Instance['i'], name: Blocklist['name'], address: Blocklist['address']) => db.tx(async t => {
+export const create = async (user: User['i'], instance: Instance['i'], options: {
+	name: Blocklist['name'],
+	address: Blocklist['address'],
+	type: EBlocklistType
+}) => db.tx(async t => {
 	const time = new Date();
 
 	const [one] = await blocklist(t).insert({
 		i_user: user,
 		i_instance: instance,
-		name,
-		address,
+		name: options.name,
+		address: options.address,
+		type: options.type,
 		created_at: time,
 		updated_at: time,
 	});

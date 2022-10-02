@@ -1,29 +1,28 @@
+import fss from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {listCache} from '../../states/cache.js';
 import {workspaces} from '../../states/workspace.js';
-import derive from '../error/derive.js';
 
-export const pull = async (id: string): Promise<string> => {
-	const [error, out] = await derive(fs.readFile(path.join(workspaces.user, id), 'utf-8'));
+export const pull = async (id: string) => {
+	const to = path.join(workspaces.user, id);
 
-	if (error) {
+	if (!fss.existsSync(workspaces.user)) {
 		await fs.mkdir(workspaces.user, {recursive: true});
-
-		return pull(id);
+		await fs.writeFile(to, '', 'utf-8');
 	}
+
+	const out = await fs.readFile(to, 'utf-8');
 
 	return out;
 };
 
-export const push = async (id: string, filter: string): Promise<void> => {
-	const [error] = await derive(fs.writeFile(path.join(workspaces.filter, id), filter, 'utf-8'));
-
-	if (error) {
-		await fs.mkdir(workspaces.filter, {recursive: true});
-
-		return push(id, filter);
+export const push = async (id: string, filter: string) => {
+	if (!fss.existsSync(workspaces.user)) {
+		await fs.mkdir(workspaces.user, {recursive: true});
 	}
+
+	await fs.writeFile(path.join(workspaces.user, id), filter, 'utf-8');
 
 	listCache.set(id, filter);
 };

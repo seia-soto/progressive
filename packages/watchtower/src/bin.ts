@@ -14,6 +14,10 @@ import {factory} from './index.js';
 	console.log(address);
 
 	process.on('SIGINT', async () => {
+		if (process.env.SHUTDOWN_UNSAFE) {
+			process.exit(0);
+		}
+
 		console.time('down');
 
 		await server.close();

@@ -118,6 +118,13 @@
         "typeName": "TEXT"
       },
       {
+        "name": "type",
+        "isNullable": false,
+        "hasDefault": false,
+        "typeId": 23,
+        "typeName": "INTEGER"
+      },
+      {
         "name": "updated_at",
         "isNullable": false,
         "hasDefault": false,

@@ -15,11 +15,16 @@ export const RTBlocklistAddress = Type.String({
 	maxLength: 2048,
 	format: 'url',
 });
+export const RTBlocklistType = Type.Number({
+	minimum: 0,
+	maximum: 1,
+});
 
 export const RTBlocklist = Type.Object({
 	i: RTBlocklistId,
 	name: RTBlocklistName,
 	address: RTBlocklistAddress,
+	type: RTBlocklistType,
 });
 
 // Create

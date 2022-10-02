@@ -1,3 +1,4 @@
+import {EBlocklistType} from '../../models/blocklist.js';
 import {EBlocklistError} from '../../models/error/keys.js';
 import {blocklist} from '../../models/index.js';
 import {RBlocklistCreateBody, RBlocklistCreateParam, RBlocklistCreateResponse, RBlocklistModifyBody, RBlocklistModifyParam, RBlocklistModifyResponse, RBlocklistQueryByInstanceParam, RBlocklistQueryByInstanceResponse, RBlocklistRemoveParam, RBlocklistRemoveResponse} from '../../models/reply/blocklist.js';
@@ -38,7 +39,9 @@ export const router: TFastifyTypedPluginCallback = (fastify, opts, done) => {
 			},
 		},
 		async handler(request) {
-			const [code] = await blocklist.create(request.user.i, parseInt(request.params.instance, 10), request.body.name, request.body.address);
+			const {name, address} = request.body;
+
+			const [code] = await blocklist.create(request.user.i, parseInt(request.params.instance, 10), {name, address, type: EBlocklistType.Remote});
 			const response = createBaseResponse(code);
 
 			response.message.readable = 'You created a blocklist.';
