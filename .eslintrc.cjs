@@ -19,5 +19,6 @@ module.exports = {
 		camelcase: 0,
 		'no-await-in-loop': 0,
 		'default-case': 0,
+		'no-bitwise': 0,
 	},
 };
