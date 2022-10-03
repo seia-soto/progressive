@@ -9,6 +9,12 @@ export const isOwnedByUser = async (user: User['i'], id: Blocklist['i'], t: Tran
 	return count;
 };
 
+export const isModifiableByUser = async (user: User['i'], id: Blocklist['i'], t: Transaction | ConnectionPool = db) => {
+	const count = await blocklist(t).count({i: id, i_user: user, type: EBlocklistType.Remote});
+
+	return count;
+};
+
 // Service
 /* eslint-disable no-unused-vars */
 export const enum EBlocklistType {
@@ -44,7 +50,7 @@ export const create = async (user: User['i'], instance: Instance['i'], options: 
 });
 
 export const remove = async (user: User['i'], id: Blocklist['i']) => db.tx(async t => {
-	if (!await isOwnedByUser(user, id, t)) {
+	if (!await isModifiableByUser(user, id, t)) {
 		return [EBlocklistError.blocklistNotOwnedByUser] as const;
 	}
 
@@ -56,7 +62,7 @@ export const remove = async (user: User['i'], id: Blocklist['i']) => db.tx(async
 export type TBlocklistModifiablePayload = Partial<Pick<Blocklist, 'name' | 'address'>>
 
 export const modify = async (user: User['i'], id: Blocklist['i'], payload: TBlocklistModifiablePayload) => db.tx(async t => {
-	if (!await isOwnedByUser(user, id, t)) {
+	if (!await isModifiableByUser(user, id, t)) {
 		return [EBlocklistError.blocklistNotOwnedByUser] as const;
 	}
 
