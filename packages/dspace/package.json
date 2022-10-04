@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "tsc": "tsc",
-    "ava": "ava",
+    "test": "ava",
     "build": "swc src -d out --config-file ../../.swcrc --copy-files",
     "start": "node .",
-    "start:unsafe": "SHUTDOWN_UNSAFE=1 node ."
+    "start:unsafe": "node ."
   },
   "keywords": [],
   "author": "HoJeong Go <seia@outlook.kr>",
@@ -20,8 +20,5 @@
     "nodeArguments": [
       "--loader=ts-node/esm"
     ]
-  },
-  "devDependencies": {
-    "ava": "^4.3.3"
   }
 }

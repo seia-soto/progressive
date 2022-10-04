@@ -2,26 +2,30 @@ import {TQuestionSection, TRequest, TResourceRecord} from './decode.js';
 import {EResourceRecordType} from './definition.js';
 
 export const octets = (fragments: (readonly [number, number])[]) => {
-	const octets: number[] = [];
-	let bits = 0;
-	let byte = 0;
+	const buffer: number[] = [];
+	let octet = 0o0;
+	let count = 0;
 
 	for (let i = 0; i < fragments.length; i++) {
 		const [data, size] = fragments[i];
 
-		for (let k = size - 1; k >= 0; k--) {
-			if (data & 2 ** k) {
-				byte |= 2 ** (k - (Math.floor(k / 8) * 8));
+		for (let i = size - 1; i >= 0; i--) {
+			if (!(count % 8)) {
+				buffer.push(octet & 0xFF);
+				octet = 0o0;
 			}
 
-			if (!(++bits % 8)) {
-				octets.push(byte % 0xFF);
-				byte = 0;
+			if (data & (2 ** i)) {
+				octet |= 2 ** (i - (Math.floor(i / 8) * 8));
 			}
+
+			count++;
 		}
 	}
 
-	return octets;
+	buffer.push(octet);
+
+	return buffer.slice(1);
 };
 
 export const header = (data: TRequest) => octets([
@@ -43,7 +47,7 @@ export const header = (data: TRequest) => octets([
 ]);
 
 export const questionSection = (data: TQuestionSection) => octets([
-	...data.domain.split('').map(char => [char.charCodeAt(0), 8] as const),
+	...(data.domain + '\0').split('').map(char => [char.charCodeAt(0), 8] as const),
 	[data.record, 16],
 	[data.unit, 16],
 ]);
