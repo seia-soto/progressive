@@ -103,8 +103,7 @@ export const readArbitraryText = (buffer: Buffer, offsetBytes: number, size?: nu
 	let text = '';
 
 	for (let i = 0; ;) {
-		const charCode = buffer.readUint8(index);
-		index += 1;
+		const charCode = buffer.readUint8(index++);
 
 		if (
 			!charCode
@@ -144,6 +143,21 @@ export const questionSection = (buffer: Buffer, offset: number) => {
 export type TQuestionSection = ReturnType<typeof questionSection>[1]
 
 // Reference: https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.3
+export interface IResourceRecord {
+	domain: string,
+	type: EResourceRecordType,
+	unit: EClassType,
+	ttl: number,
+	resourceDataLength: number,
+}
+
+export interface IResourceRecordOfA extends IResourceRecord {
+	type: EResourceRecordType.A,
+	resourceData: [number, number, number, number]
+}
+
+export type TResourceRecord = IResourceRecordOfA
+
 export const resourceRecord = (buffer: Buffer, offset: number) => {
 	let index = Math.floor(offset / 8);
 
@@ -162,19 +176,42 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 	const resourceDataLength = buffer.readUint16BE(index);
 	index += 2;
 
-	const [afterData, resourceData] = readArbitraryText(buffer, index, resourceDataLength);
-	index = afterData;
-
 	const resourceRecord = {
 		domain,
 		type,
 		unit,
 		ttl,
 		resourceDataLength,
-		resourceData,
-	};
+	} as const;
+
+	switch (type) {
+		case EResourceRecordType.A: {
+			if (resourceDataLength !== 32) {
+				throw new Error('The RDLENGTH field of A record should be 32!');
+			}
+
+			const resourceData = [
+				buffer.readUint8(index++),
+				buffer.readUint8(index++),
+				buffer.readUint8(index++),
+				buffer.readUint8(index++),
+			];
+
+			return [
+				index * 8,
+				{
+					...resourceRecord,
+					type: EResourceRecordType.A,
+					resourceData,
+				} as const,
+			] as const;
+		}
+	}
 
 	return [index * 8, resourceRecord] as const;
 };
 
-export type TResourceRecord = ReturnType<typeof resourceRecord>[1]
+/**
+ * This type is used to get fully typed output of resourceRecord function instead of a pre-defined set with the resourceRecordData standards.
+ */
+export type TArbitraryResourceRecord = ReturnType<typeof resourceRecord>[1]

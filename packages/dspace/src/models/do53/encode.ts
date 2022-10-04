@@ -1,4 +1,5 @@
 import {TQuestionSection, TRequest, TResourceRecord} from './decode.js';
+import {EResourceRecordType} from './definition.js';
 
 export const octets = (fragments: (readonly [number, number])[]) => {
 	const octets: number[] = [];
@@ -47,11 +48,30 @@ export const questionSection = (data: TQuestionSection) => octets([
 	[data.unit, 16],
 ]);
 
-export const resourceRecord = (data: TResourceRecord) => octets([
-	...data.domain.split('').map(char => [char.charCodeAt(0), 8] as const),
-	[data.type, 16],
-	[data.unit, 16],
-	[data.ttl, 32],
-	[data.resourceDataLength, 16],
-	...data.resourceData.split('').map(char => [char.charCodeAt(0), 8] as const),
-]);
+export const resourceRecord = (data: TResourceRecord) => {
+	const fragments: (readonly [number, number])[] = [
+		...(data.domain + '\0').split('').map(char => [char.charCodeAt(0), 8] as const),
+		[data.type, 16],
+		[data.unit, 16],
+		[data.ttl, 32],
+	];
+
+	switch (data.type) {
+		case EResourceRecordType.A: {
+			fragments.push(
+				[32, 16],
+				...data.resourceData.map(entry => [entry, 8] as const),
+			);
+
+			break;
+		}
+
+		default: {
+			fragments.push([data.resourceDataLength, 16]);
+
+			break;
+		}
+	}
+
+	return octets(fragments);
+};
