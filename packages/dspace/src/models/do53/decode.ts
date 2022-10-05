@@ -1,11 +1,43 @@
 import {pick, range} from 'buffertly';
 import {EClass, EFlag, EOperationCode, EQueryOrResponse, EResourceRecord, EResponseCode} from './definition.js';
 
+/**
+ * Read an arbitrary text from buffer ending with null terminator
+ * @param buffer The buffer object
+ * @param offset The offset
+ * @returns The new offset
+ */
+export const readArbitraryText = (buffer: Buffer, offset: number, size?: number) => {
+	let index = offset;
+
+	const specials: Record<number, string> = {
+		3: '.',
+		6: '', // ACK in ASCII table but not known yet
+	};
+	let text = '';
+
+	for (let i = 0; ;) {
+		const charCode = range(buffer, index, 8);
+		index += 8;
+
+		if (
+			!charCode
+			|| (size && i >= size)
+		) {
+			break;
+		}
+
+		text += specials[charCode] ?? String.fromCharCode(charCode);
+	}
+
+	return [index, text] as const;
+};
+
 // Reference: https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.1
 export const header = (buffer: Buffer) => {
 	let index = 0;
 
-	const identifier = buffer.readUInt16BE(index);
+	const identifier = range(buffer, index, 16);
 	index += 16;
 
 	const isResponse: EQueryOrResponse = pick(buffer, index++);
@@ -27,16 +59,16 @@ export const header = (buffer: Buffer) => {
 	const responseCode: EResponseCode = range(buffer, index, 4);
 	index += 4;
 
-	const question = buffer.readUInt16BE(index / 8);
+	const question = range(buffer, index, 16);
 	index += 16;
 
-	const answer = buffer.readUint16BE(index / 8);
+	const answer = range(buffer, index, 16);
 	index += 16;
 
-	const nameserver = buffer.readUint16BE(index / 8);
+	const nameserver = range(buffer, index, 16);
 	index += 16;
 
-	const additionalResources = buffer.readUint16BE(index / 8);
+	const additionalResources = range(buffer, index, 16);
 	index += 16;
 
 	const request = {
@@ -63,61 +95,18 @@ export const header = (buffer: Buffer) => {
 
 export type THeader = ReturnType<typeof header>[1]
 
-/**
- * Read an arbitrary text from buffer ending with null terminator
- * @param buffer The buffer object
- * @param offsetBytes The offset in bytes (multiply 8 from bits)
- * @returns The updated offset in bytes (divde by 8 to bits)
- */
-export const readArbitraryText = (buffer: Buffer, offsetBytes: number, size?: number) => {
-	let index = Math.floor(offsetBytes);
-
-	// Handle pointer
-	let restorationPoint = -1;
-
-	if (pick(buffer, index) + pick(buffer, index + 1) === 2) {
-		restorationPoint = index + 16;
-		index = range(buffer, index + 2, 14);
-	}
-
-	const specials: Record<number, string> = {
-		3: '.',
-		6: '', // ACK in ASCII table but not known yet
-	};
-	let text = '';
-
-	for (let i = 0; ;) {
-		const charCode = buffer.readUint8(index++);
-
-		if (
-			!charCode
-      || (size && i >= size)
-		) {
-			break;
-		}
-
-		text += specials[charCode] ?? String.fromCharCode(charCode);
-	}
-
-	if (restorationPoint >= 0) {
-		index = restorationPoint;
-	}
-
-	return [index, text] as const;
-};
-
 // Reference: https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.2
 export const questionSection = (buffer: Buffer, offset: number) => {
-	let index = Math.floor(offset / 8);
+	let index = offset;
 
 	const [position, domain] = readArbitraryText(buffer, index);
 	index = position;
 
-	const type: EResourceRecord = buffer.readUint16BE(index);
-	index += 2;
+	const type: EResourceRecord = range(buffer, index, 16);
+	index += 16;
 
-	const _class: EClass = buffer.readUint16BE(index);
-	index += 2;
+	const _class: EClass = range(buffer, index, 16);
+	index += 16;
 
 	const question = {
 		domain,
@@ -144,25 +133,96 @@ export interface IResourceRecordOfA extends IResourceRecord {
 	resourceData: [number, number, number, number]
 }
 
+export interface IResourceRecordOfCname extends IResourceRecord {
+	type: EResourceRecord.CNAME,
+	resourceData: string
+}
+
+export interface IResourceRecordOfHinfo extends IResourceRecord {
+	type: EResourceRecord.HINFO,
+	resourceData: {
+		cpu: string,
+		operatingSystem: string
+	}
+}
+
+export interface IResourceRecordOfMb extends IResourceRecord {
+	type: EResourceRecord.MB,
+	resourceData: string
+}
+
+export interface IResourceRecordOfMg extends IResourceRecord {
+	type: EResourceRecord.MG,
+	resourceData: string
+}
+
+export interface IResourceRecordOfMinfo extends IResourceRecord {
+	type: EResourceRecord.MINFO,
+	resourceData: {
+		receiveMailbox: string,
+		errorMailbox: string
+	}
+}
+
+export interface IResourceRecordOfMr extends IResourceRecord {
+	type: EResourceRecord.MR,
+	resourceData: string
+}
+
+export interface IResourceRecordOfMx extends IResourceRecord {
+	type: EResourceRecord.MX,
+	resourceData: {
+		preference: number,
+		domain: string
+	}
+}
+
+export interface IResourceRecordOfNs extends IResourceRecord {
+	type: EResourceRecord.NS,
+	resourceData: string
+}
+
+export interface IResourceRecordOfPtr extends IResourceRecord {
+	type: EResourceRecord.PTR,
+	resourceData: string
+}
+
+/**
+ * Note that NULL record is not handled.
+ */
+export interface IResourceRecordOfNull extends IResourceRecord {
+	type: EResourceRecord.NULL,
+	resourceData: number[]
+}
+
 export type TResourceRecord = IResourceRecordOfA
+	| IResourceRecordOfCname
+  | IResourceRecordOfHinfo
+	| IResourceRecordOfMb
+	| IResourceRecordOfMg
+	| IResourceRecordOfMinfo
+	| IResourceRecordOfMr
+	| IResourceRecordOfMx
+	| IResourceRecordOfNs
+	| IResourceRecordOfPtr
 
 export const resourceRecord = (buffer: Buffer, offset: number) => {
-	let index = Math.floor(offset / 8);
+	let index = offset;
 
 	const [afterDomain, domain] = readArbitraryText(buffer, index);
 	index = afterDomain;
 
-	const type: EResourceRecord = buffer.readUint16BE(index);
-	index += 2;
+	const type: EResourceRecord = range(buffer, index, 16);
+	index += 16;
 
-	const unit: EClass = buffer.readUint16BE(index);
-	index += 2;
+	const unit: EClass = range(buffer, index, 16);
+	index += 16;
 
-	const ttl = buffer.readUint32BE(index);
-	index += 4;
+	const ttl = range(buffer, index, 32);
+	index += 32;
 
-	const resourceDataLength = buffer.readUint16BE(index);
-	index += 2;
+	const resourceDataLength = range(buffer, index, 16);
+	index += 16;
 
 	const resourceRecord = {
 		domain,
@@ -173,25 +233,66 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 	} as const;
 
 	switch (type) {
-		case EResourceRecord.A: {
+		case EResourceRecord.A:
+		{
 			if (resourceDataLength !== 32) {
 				throw new Error('The RDLENGTH field of A record should be 32!');
 			}
 
 			const resourceData = [
-				buffer.readUint8(index++),
-				buffer.readUint8(index++),
-				buffer.readUint8(index++),
-				buffer.readUint8(index++),
+				range(buffer, index, 8),
+				range(buffer, index + 8, 8),
+				range(buffer, index + 16, 8),
+				range(buffer, index + 24, 8),
 			];
+			index += 32;
 
 			return [
-				index * 8,
+				index,
 				{
 					...resourceRecord,
 					type: EResourceRecord.A,
 					resourceData,
-				} as const,
+				} as IResourceRecordOfA,
+			] as const;
+		}
+
+		case EResourceRecord.CNAME:
+		case EResourceRecord.MB:
+		case EResourceRecord.MG:
+		case EResourceRecord.MR:
+		case EResourceRecord.NS:
+		case EResourceRecord.PTR:
+		{
+			const [afterResourceData, resourceData] = readArbitraryText(buffer, index, resourceDataLength);
+			index = afterResourceData;
+
+			return [
+				index,
+				{
+					...resourceRecord,
+					type: EResourceRecord.CNAME,
+					resourceData,
+				} as IResourceRecordOfCname,
+			] as const;
+		}
+
+		case EResourceRecord.HINFO:
+		{
+			const [afterCpu, cpu] = readArbitraryText(buffer, index, resourceDataLength);
+			const [afterOperatingSystem, operatingSystem] = readArbitraryText(buffer, afterCpu, resourceDataLength);
+			index = afterOperatingSystem;
+
+			return [
+				index,
+				{
+					...resourceRecord,
+					type: EResourceRecord.HINFO,
+					resourceData: {
+						cpu,
+						operatingSystem,
+					},
+				} as IResourceRecordOfHinfo,
 			] as const;
 		}
 	}

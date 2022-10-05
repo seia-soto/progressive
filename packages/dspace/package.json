@@ -7,8 +7,7 @@
     "tsc": "tsc",
     "test": "ava",
     "build": "swc src -d out --config-file ../../.swcrc --copy-files",
-    "start": "node .",
-    "start:unsafe": "node ."
+    "start": "node ."
   },
   "keywords": [],
   "author": "HoJeong Go <seia@outlook.kr>",

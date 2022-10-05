@@ -1,6 +1,16 @@
 import {octets} from 'buffertly';
-import {THeader, TQuestionSection, TResourceRecord} from './decode.js';
+import {IResourceRecord, THeader, TQuestionSection, TResourceRecord} from './decode.js';
 import {EResourceRecord} from './definition.js';
+
+export const writeStringToOctetFragment = (text: string) => {
+	const fragments: (readonly [number, number])[] = [];
+
+	for (let i = 0; i < text.length; i++) {
+		fragments.push([text.charCodeAt(i), 8]);
+	}
+
+	return fragments;
+};
 
 export const header = (data: THeader) => octets([
 	[data.identifier, 16],
@@ -19,21 +29,22 @@ export const header = (data: THeader) => octets([
 ]);
 
 export const questionSection = (data: TQuestionSection) => octets([
-	...(data.domain + '\0').split('').map(char => [char.charCodeAt(0), 8] as const),
+	...writeStringToOctetFragment(data.domain + '\0'),
 	[data.type, 16],
 	[data.class, 16],
 ]);
 
 export const resourceRecord = (data: TResourceRecord) => {
 	const fragments: (readonly [number, number])[] = [
-		...(data.domain + '\0').split('').map(char => [char.charCodeAt(0), 8] as const),
+		...writeStringToOctetFragment(data.domain + '\0'),
 		[data.type, 16],
 		[data.unit, 16],
 		[data.ttl, 32],
 	];
 
 	switch (data.type) {
-		case EResourceRecord.A: {
+		case EResourceRecord.A:
+		{
 			fragments.push(
 				[32, 16],
 				...data.resourceData.map(entry => [entry, 8] as const),
@@ -42,8 +53,62 @@ export const resourceRecord = (data: TResourceRecord) => {
 			break;
 		}
 
+		case EResourceRecord.CNAME:
+		case EResourceRecord.MB:
+		case EResourceRecord.MG:
+		case EResourceRecord.MR:
+		case EResourceRecord.NS:
+		case EResourceRecord.PTR:
+		{
+			const domain = data.resourceData + '\0';
+
+			fragments.push(
+				[domain.length * 8, 16],
+				...writeStringToOctetFragment(domain),
+			);
+
+			break;
+		}
+
+		case EResourceRecord.HINFO:
+		{
+			const text = data.resourceData.cpu + '\0'
+				+ data.resourceData.operatingSystem + '\0';
+
+			fragments.push(
+				[text.length * 8, 16],
+				...writeStringToOctetFragment(text),
+			);
+
+			break;
+		}
+
+		case EResourceRecord.MINFO:
+		{
+			const text = data.resourceData.receiveMailbox + '\0'
+				+ data.resourceData.errorMailbox + '\0';
+
+			fragments.push(
+				[text.length * 8, 16],
+				...writeStringToOctetFragment(text),
+			);
+
+			break;
+		}
+
+		case EResourceRecord.MX:
+		{
+			fragments.push(
+				[16 + data.resourceData.domain.length, 16],
+				[data.resourceData.preference, 16],
+				...writeStringToOctetFragment(data.resourceData.domain),
+			);
+
+			break;
+		}
+
 		default: {
-			fragments.push([data.resourceDataLength, 16]);
+			fragments.push([(data as IResourceRecord).resourceDataLength, 16]);
 
 			break;
 		}

@@ -1,4 +1,4 @@
-import {EClass, EQueryOrResponse, EResourceRecord} from './models/do53/definition.js';
+import {EClass, EFlag, EQueryOrResponse, EResourceRecord, EResponseCode} from './models/do53/definition.js';
 import {decode, encode} from './models/do53/index.js';
 import {createServer} from './models/do53/server.js';
 
@@ -14,10 +14,25 @@ export const create = () => {
 
 		const [, request] = decode.request(message);
 
-		request.header.isResponse = EQueryOrResponse.Response;
-
 		const response = encode.request(
-			request.header,
+			{
+				identifier: request.header.identifier,
+				isResponse: EQueryOrResponse.Response,
+				operationCode: request.header.operationCode,
+				flag: {
+					isAuthorized: EFlag.Disabled,
+					isTruncated: EFlag.Disabled,
+					isRecursionDesired: EFlag.Disabled,
+					isRecursionAvailable: EFlag.Disabled,
+				},
+				responseCode: EResponseCode.NoError,
+				count: {
+					question: 0,
+					answer: 1,
+					nameserver: 0,
+					additionalResources: 0,
+				},
+			},
 			{
 				questions: [],
 				answers: [
