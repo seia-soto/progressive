@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Buffertly is a dead simple utility to play with octets over network.",
   "main": "out/index.js",
+  "type": "module",
   "scripts": {
     "build": "swc src -d out --config-file ../../.swcrc --copy-files && tsc src/index.ts --d --outDir out --emitDeclarationOnly --target es2022",
     "test": "ava"
