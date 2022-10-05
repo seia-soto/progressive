@@ -13,7 +13,6 @@ export const create = () => {
 		console.log(message, 'from', remote.address, remote.port);
 
 		const [, request] = decode.request(message);
-
 		const response = encode.request(
 			{
 				identifier: request.header.identifier,
@@ -27,14 +26,14 @@ export const create = () => {
 				},
 				responseCode: EResponseCode.NoError,
 				count: {
-					question: 0,
+					question: request.header.count.question,
 					answer: 1,
 					nameserver: 0,
 					additionalResources: 0,
 				},
 			},
 			{
-				questions: [],
+				questions: request.questions,
 				answers: [
 					{
 						domain: 'google.com',

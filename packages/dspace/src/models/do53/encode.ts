@@ -12,6 +12,26 @@ export const writeStringToOctetFragment = (text: string) => {
 	return fragments;
 };
 
+export const writeLabelsToOctetFragment = (text: string) => {
+	const fragments: (readonly [number, number])[] = [];
+
+	const labels = text.split('.');
+
+	for (let i = 0; i < labels.length; i++) {
+		const label = labels[i];
+
+		fragments.push([label.length, 8]);
+
+		for (let k = 0; k < label.length; k++) {
+			fragments.push([label.charCodeAt(k), 8]);
+		}
+	}
+
+	fragments.push([0, 8]);
+
+	return fragments;
+};
+
 export const header = (data: THeader) => octets([
 	[data.identifier, 16],
 	[data.isResponse, 1],
@@ -29,14 +49,14 @@ export const header = (data: THeader) => octets([
 ]);
 
 export const questionSection = (data: TQuestionSection) => octets([
-	...writeStringToOctetFragment(data.domain + '\0'),
+	...writeLabelsToOctetFragment(data.domain),
 	[data.type, 16],
 	[data.class, 16],
 ]);
 
 export const resourceRecord = (data: TResourceRecord) => {
 	const fragments: (readonly [number, number])[] = [
-		...writeStringToOctetFragment(data.domain + '\0'),
+		...writeLabelsToOctetFragment(data.domain),
 		[data.type, 16],
 		[data.unit, 16],
 		[data.ttl, 32],
@@ -60,11 +80,11 @@ export const resourceRecord = (data: TResourceRecord) => {
 		case EResourceRecord.NS:
 		case EResourceRecord.PTR:
 		{
-			const domain = data.resourceData + '\0';
+			const frames = writeLabelsToOctetFragment(data.resourceData);
 
 			fragments.push(
-				[domain.length * 8, 16],
-				...writeStringToOctetFragment(domain),
+				[frames.length * 8, 16],
+				...frames,
 			);
 
 			break;
@@ -85,12 +105,13 @@ export const resourceRecord = (data: TResourceRecord) => {
 
 		case EResourceRecord.MINFO:
 		{
-			const text = data.resourceData.receiveMailbox + '\0'
-				+ data.resourceData.errorMailbox + '\0';
+			const rmailbox = writeLabelsToOctetFragment(data.resourceData.receiveMailbox);
+			const emailbox = writeLabelsToOctetFragment(data.resourceData.errorMailbox);
 
 			fragments.push(
-				[text.length * 8, 16],
-				...writeStringToOctetFragment(text),
+				[(rmailbox.length + emailbox.length) * 8, 16],
+				...rmailbox,
+				...emailbox,
 			);
 
 			break;
@@ -98,10 +119,12 @@ export const resourceRecord = (data: TResourceRecord) => {
 
 		case EResourceRecord.MX:
 		{
+			const frames = writeLabelsToOctetFragment(data.resourceData.domain);
+
 			fragments.push(
-				[16 + data.resourceData.domain.length, 16],
+				[16 + (frames.length * 8), 16],
 				[data.resourceData.preference, 16],
-				...writeStringToOctetFragment(data.resourceData.domain),
+				...frames,
 			);
 
 			break;

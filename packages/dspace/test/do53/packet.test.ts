@@ -30,15 +30,6 @@ test('header', async t => {
 	);
 });
 
-const text = 'domain.tld';
-
-test('writeStringToOctetFragment', async t => {
-	t.is(
-		text,
-		decode.readArbitraryText(Buffer.from(octets(encode.writeStringToOctetFragment(text))), 0)[1],
-	);
-});
-
 const question: decode.TQuestionSection = {
 	type: EResourceRecord.A,
 	domain: 'domain.tld',
@@ -65,5 +56,21 @@ test('resourceRecord', async t => {
 	t.deepEqual(
 		resourceRecord,
 		decode.resourceRecord(Buffer.from(encode.resourceRecord(resourceRecord)), 0)[1],
+	);
+});
+
+const text = 'domain.tld';
+
+test('writeStringToOctetFragment', async t => {
+	t.is(
+		text,
+		decode.readArbitraryText(Buffer.from(octets(encode.writeStringToOctetFragment(text))), 0)[1],
+	);
+});
+
+test('writeLabelsToOctetFragment', async t => {
+	t.is(
+		text,
+		decode.readArbitraryLabel(Buffer.from(octets(encode.writeLabelsToOctetFragment(text))), 0)[1],
 	);
 });

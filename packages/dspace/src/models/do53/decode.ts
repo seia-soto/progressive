@@ -2,6 +2,37 @@ import {pick, range} from 'buffertly';
 import {EClass, EFlag, EOperationCode, EQueryOrResponse, EResourceRecord, EResponseCode} from './definition.js';
 
 /**
+ * Read an arbitrary labels from buffer ending with null terminator
+ * @param buffer The buffer object
+ * @param offset The offset
+ * @returns The new offset
+ */
+export const readArbitraryLabel = (buffer: Buffer, offset: number, size: number = 65535) => {
+	let index = offset;
+	let text = '';
+
+	for (let k = 0; k < size; k++) {
+		const labelSize = range(buffer, index, 8);
+		index += 8;
+
+		if (!labelSize) {
+			break;
+		}
+
+		text += '.';
+
+		for (let i = 0; i < labelSize; i++) {
+			const charCode = range(buffer, index, 8);
+			index += 8;
+
+			text += String.fromCharCode(charCode);
+		}
+	}
+
+	return [index, text.slice(1)] as const;
+};
+
+/**
  * Read an arbitrary text from buffer ending with null terminator
  * @param buffer The buffer object
  * @param offset The offset
@@ -9,11 +40,6 @@ import {EClass, EFlag, EOperationCode, EQueryOrResponse, EResourceRecord, ERespo
  */
 export const readArbitraryText = (buffer: Buffer, offset: number, size?: number) => {
 	let index = offset;
-
-	const specials: Record<number, string> = {
-		3: '.',
-		6: '', // ACK in ASCII table but not known yet
-	};
 	let text = '';
 
 	for (let i = 0; ;) {
@@ -27,7 +53,7 @@ export const readArbitraryText = (buffer: Buffer, offset: number, size?: number)
 			break;
 		}
 
-		text += specials[charCode] ?? String.fromCharCode(charCode);
+		text += String.fromCharCode(charCode);
 	}
 
 	return [index, text] as const;
@@ -99,7 +125,7 @@ export type THeader = ReturnType<typeof header>[1]
 export const questionSection = (buffer: Buffer, offset: number) => {
 	let index = offset;
 
-	const [position, domain] = readArbitraryText(buffer, index);
+	const [position, domain] = readArbitraryLabel(buffer, index);
 	index = position;
 
 	const type: EResourceRecord = range(buffer, index, 16);
@@ -209,7 +235,7 @@ export type TResourceRecord = IResourceRecordOfA
 export const resourceRecord = (buffer: Buffer, offset: number) => {
 	let index = offset;
 
-	const [afterDomain, domain] = readArbitraryText(buffer, index);
+	const [afterDomain, domain] = readArbitraryLabel(buffer, index);
 	index = afterDomain;
 
 	const type: EResourceRecord = range(buffer, index, 16);
@@ -264,7 +290,7 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 		case EResourceRecord.NS:
 		case EResourceRecord.PTR:
 		{
-			const [afterResourceData, resourceData] = readArbitraryText(buffer, index, resourceDataLength);
+			const [afterResourceData, resourceData] = readArbitraryLabel(buffer, index, resourceDataLength);
 			index = afterResourceData;
 
 			return [
