@@ -48,7 +48,7 @@ const resourceRecord: decode.IResourceRecordOfA = {
 	type: EResourceRecord.A,
 	unit: EClass.Internet,
 	ttl: 60 * 2,
-	resourceDataLength: 32,
+	resourceDataLength: 4,
 	resourceData: [127, 0, 0, 1],
 };
 

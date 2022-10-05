@@ -271,8 +271,8 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 	switch (type) {
 		case EResourceRecord.A:
 		{
-			if (resourceDataLength !== 32) {
-				throw new Error('The RDLENGTH field of A record should be 32!');
+			if (resourceDataLength !== 4) {
+				throw new Error('The RDLENGTH field of A record should be 4!');
 			}
 
 			const resourceData = [
