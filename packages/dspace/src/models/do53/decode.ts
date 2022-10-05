@@ -72,6 +72,14 @@ export type THeader = ReturnType<typeof header>[1]
 export const readArbitraryText = (buffer: Buffer, offsetBytes: number, size?: number) => {
 	let index = Math.floor(offsetBytes);
 
+	// Handle pointer
+	let restorationPoint = -1;
+
+	if (pick(buffer, index) + pick(buffer, index + 1) === 2) {
+		restorationPoint = index + 16;
+		index = range(buffer, index + 2, 14);
+	}
+
 	const specials: Record<number, string> = {
 		3: '.',
 		6: '', // ACK in ASCII table but not known yet
@@ -89,6 +97,10 @@ export const readArbitraryText = (buffer: Buffer, offsetBytes: number, size?: nu
 		}
 
 		text += specials[charCode] ?? String.fromCharCode(charCode);
+	}
+
+	if (restorationPoint >= 0) {
+		index = restorationPoint;
 	}
 
 	return [index, text] as const;
@@ -137,20 +149,8 @@ export type TResourceRecord = IResourceRecordOfA
 export const resourceRecord = (buffer: Buffer, offset: number) => {
 	let index = Math.floor(offset / 8);
 
-	// Handle pointer
-	let restorationPoint = -1;
-
-	if (pick(buffer, index) + pick(buffer, index + 1) === 2) {
-		restorationPoint = index;
-		index = range(buffer, index + 2, 14);
-	}
-
 	const [afterDomain, domain] = readArbitraryText(buffer, index);
 	index = afterDomain;
-
-	if (restorationPoint >= 0) {
-		index = restorationPoint;
-	}
 
 	const type: EResourceRecord = buffer.readUint16BE(index);
 	index += 2;
