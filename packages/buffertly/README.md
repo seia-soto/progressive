@@ -1,6 +1,6 @@
 # Buffertly
 
-https://github.com/seia-soto/progressive/packages/buffertly
+https://github.com/seia-soto/progressive/tree/master/packages/buffertly
 
 Buffertly(name from butterfly) is a dead simple utility to play with octets over network.
 The original use of this set of functions is to play easy with buffers over network to implement the DNS server.
