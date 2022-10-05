@@ -137,8 +137,20 @@ export type TResourceRecord = IResourceRecordOfA
 export const resourceRecord = (buffer: Buffer, offset: number) => {
 	let index = Math.floor(offset / 8);
 
+	// Handle pointer
+	let restorationPoint = -1;
+
+	if (pick(buffer, index) + pick(buffer, index + 1) === 2) {
+		restorationPoint = index;
+		index = range(buffer, index + 2, 14);
+	}
+
 	const [afterDomain, domain] = readArbitraryText(buffer, index);
 	index = afterDomain;
+
+	if (restorationPoint >= 0) {
+		index = restorationPoint;
+	}
 
 	const type: EResourceRecord = buffer.readUint16BE(index);
 	index += 2;
