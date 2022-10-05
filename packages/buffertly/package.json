@@ -15,5 +15,13 @@
     "type": "git",
     "url": "https://github.com/seia-soto/progressive",
     "directory": "packages/buffertly"
+  },
+  "ava": {
+    "extensions": {
+      "ts": "module"
+    },
+    "nodeArguments": [
+      "--loader=ts-node/esm"
+    ]
   }
 }

@@ -1,5 +1,5 @@
 import test from 'ava';
-import {octets, pick, range} from '../src';
+import {octets, pick, range} from '../src/index.js';
 
 test('encode.octets', async t => {
 	for (let i = 0; i < (16 ** 2) - 1; i++) {
