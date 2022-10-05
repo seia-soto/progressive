@@ -48,7 +48,7 @@ export const range = (buffer: Buffer, offset: number, size: number): number => {
 	let value = 0x0;
 
 	for (let i = 0; i < size; i++) {
-		if (pick(buffer, offset + i)) {
+		if (pick(buffer, offset + (size - i - 1))) {
 			value |= 2 ** i;
 		}
 	}
