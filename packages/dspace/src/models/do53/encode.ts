@@ -66,7 +66,7 @@ export const resourceRecord = (data: TResourceRecord) => {
 		case EResourceRecord.A:
 		{
 			fragments.push(
-				[32, 16],
+				[4, 16],
 				...data.resourceData.map(entry => [entry, 8] as const),
 			);
 
@@ -83,7 +83,7 @@ export const resourceRecord = (data: TResourceRecord) => {
 			const frames = writeLabelsToOctetFragment(data.resourceData);
 
 			fragments.push(
-				[frames.length * 8, 16],
+				[frames.length, 16],
 				...frames,
 			);
 
@@ -96,7 +96,7 @@ export const resourceRecord = (data: TResourceRecord) => {
 				+ data.resourceData.operatingSystem + '\0';
 
 			fragments.push(
-				[text.length * 8, 16],
+				[text.length, 16],
 				...writeStringToOctetFragment(text),
 			);
 
@@ -109,7 +109,7 @@ export const resourceRecord = (data: TResourceRecord) => {
 			const emailbox = writeLabelsToOctetFragment(data.resourceData.errorMailbox);
 
 			fragments.push(
-				[(rmailbox.length + emailbox.length) * 8, 16],
+				[rmailbox.length + emailbox.length, 16],
 				...rmailbox,
 				...emailbox,
 			);
@@ -122,7 +122,7 @@ export const resourceRecord = (data: TResourceRecord) => {
 			const frames = writeLabelsToOctetFragment(data.resourceData.domain);
 
 			fragments.push(
-				[16 + (frames.length * 8), 16],
+				[2 + frames.length, 16],
 				[data.resourceData.preference, 16],
 				...frames,
 			);

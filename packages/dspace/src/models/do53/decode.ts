@@ -7,7 +7,7 @@ import {EClass, EFlag, EOperationCode, EQueryOrResponse, EResourceRecord, ERespo
  * @param offset The offset
  * @returns The new offset
  */
-export const readArbitraryLabel = (buffer: Buffer, offset: number, size: number = 65535) => {
+export const readArbitraryLabel = (buffer: Buffer, offset: number) => {
 	let index = offset;
 	let text = '';
 	let restorationPoint = 0;
@@ -17,7 +17,7 @@ export const readArbitraryLabel = (buffer: Buffer, offset: number, size: number 
 		index = range(buffer, index + 2, 14);
 	}
 
-	for (let k = 0; k < size; k++) {
+	for (; ;) {
 		const labelSize = range(buffer, index, 8);
 		index += 8;
 
@@ -300,7 +300,7 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 		case EResourceRecord.NS:
 		case EResourceRecord.PTR:
 		{
-			const [afterResourceData, resourceData] = readArbitraryLabel(buffer, index, resourceDataLength);
+			const [afterResourceData, resourceData] = readArbitraryLabel(buffer, index);
 			index = afterResourceData;
 
 			return [
