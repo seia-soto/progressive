@@ -1,3 +1,4 @@
+import {decode} from './models/do53/index.js';
 import {createServer} from './models/do53/server.js';
 
 export const create = () => {
@@ -9,6 +10,10 @@ export const create = () => {
 
 	server.on('message', (message, remote) => {
 		console.log(message, 'from', remote.address, remote.port);
+
+		const request = decode.request(message);
+
+		console.log(JSON.stringify(request[1], null, 2));
 	});
 
 	return dspace;

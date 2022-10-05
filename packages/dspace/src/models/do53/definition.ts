@@ -1,111 +1,11 @@
-// Reference: http://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-2
 /* eslint-disable no-unused-vars */
-export const enum EResourceRecordType {
-  A = 1,
-  NS,
-  MD,
-  MF,
-  CNAME,
-  SOA,
-  MB,
-  MG,
-  MR,
-  NULL,
-  WKS,
-  PTR,
-  HINFO,
-  MINFO,
-  MX,
-  TXT,
-  PR,
-  AFSDB,
-  X25,
-  ISDN,
-  RT,
-  NSAP,
-  NSAP_PTR,
-  SIG,
-  KEY,
-  PX,
-  GPOS,
-  AAAA,
-  LOC,
-  NXT,
-  EID,
-  NIMLOC,
-  SRV,
-  ATMA,
-  NAPTR,
-  KX,
-  CERT,
-  A6,
-  DNAME,
-  SINK,
-  OPT,
-  APL,
-  DS,
-  SSHFP,
-  IPSECKEY,
-  RRSIG,
-  NSEC,
-  DNSKEY,
-  DHCID,
-  NSEC3,
-  NSEC3PARAM,
-  TLSA,
-  SMIMEA,
-  HIP = 55,
-  NINFO,
-  RKEY,
-  TALINK,
-  CDS,
-  CDNSKEY,
-  OPENPGPKEY,
-  CSYNC,
-  ZONEMD,
-  SVCB,
-  HTTPS,
-  SPF = 99,
-  UINFO,
-  UID,
-  GID,
-  UNSPEC,
-  NID,
-  L32,
-  L64,
-  LP,
-  EUI48,
-  EUI64,
-  TKEY = 249,
-  TSIG,
-  IXFR,
-  AXFR,
-  MAILB,
-  MAILA,
-  Asterisk,
-  URI,
-  CAA,
-  AVC,
-  DOA,
-  AMTRELAY,
-  TA = 32768,
-  DLV
-}
-
-export const enum EQueryType {
+// Header
+export const enum EQueryOrResponse {
   Query = 0,
   Response
 }
 
-export const enum EClassType {
-  Internet = 1,
-  Chaos = 3,
-  Hesiod,
-  None = 254,
-  Any
-}
-
-export const enum EOperationType {
+export const enum EOperationCode {
   Query = 0,
   InverseQuery,
   Status,
@@ -114,7 +14,12 @@ export const enum EOperationType {
   DNSStatefulOperations
 }
 
-export const enum EResponseType {
+export const enum EFlag {
+  Disabled = 0,
+  Enabled
+}
+
+export const enum EResponseCode {
   NoError = 0,
   FormErr,
   ServFail,
@@ -139,7 +44,26 @@ export const enum EResponseType {
   BADCOOKIE
 }
 
-export const enum EFlagType {
-  Disabled = 0,
-  Enabled
+// Reference: http://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml
+export const enum EResourceRecord {
+  A = 1,
+  NS,
+  CNAME = 5,
+  SOA,
+  MB,
+  MG,
+  MR,
+  NULL,
+  WKS,
+  PTR,
+  HINFO,
+  MINFO,
+  MX,
+  TXT,
+}
+
+export const enum EClass {
+  Internet = 1,
+  Chaos = 3,
+  Hesiod,
 }

@@ -1,5 +1,5 @@
 import {pick, range} from 'buffertly';
-import {EClassType, EFlagType, EOperationType, EQueryType, EResourceRecordType, EResponseType} from './definition.js';
+import {EClass, EFlag, EOperationCode, EQueryOrResponse, EResourceRecord, EResponseCode} from './definition.js';
 
 // Reference: https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.1
 export const header = (buffer: Buffer) => {
@@ -8,30 +8,26 @@ export const header = (buffer: Buffer) => {
 	const identifier = buffer.readUInt16BE(index);
 	index += 16;
 
-	const type: EQueryType = pick(buffer, index++);
+	const isResponse: EQueryOrResponse = pick(buffer, index++);
 
-	const operation: EOperationType = range(buffer, index, 4);
+	const operationCode: EOperationCode = range(buffer, index, 4);
 	index += 4;
 
-	const authorized: EFlagType = pick(buffer, index++);
+	const isAuthorized: EFlag = pick(buffer, index++);
 
-	const truncated: EFlagType = pick(buffer, index++);
+	const isTruncated: EFlag = pick(buffer, index++);
 
-	const recursionDesired: EFlagType = pick(buffer, index++);
+	const isRecursionDesired: EFlag = pick(buffer, index++);
 
-	const recursionAvailable: EFlagType = pick(buffer, index++);
+	const isRecursionAvailable: EFlag = pick(buffer, index++);
 
 	// Z: Reserved for future
-	index += 1;
+	index += 3;
 
-	const authenticData: EFlagType = pick(buffer, index++);
-
-	const checkingDisabled: EFlagType = pick(buffer, index++);
-
-	const responseCode: EResponseType = range(buffer, index, 4);
+	const responseCode: EResponseCode = range(buffer, index, 4);
 	index += 4;
 
-	const query = buffer.readUInt16BE(index / 8);
+	const question = buffer.readUInt16BE(index / 8);
 	index += 16;
 
 	const answer = buffer.readUint16BE(index / 8);
@@ -40,34 +36,32 @@ export const header = (buffer: Buffer) => {
 	const nameserver = buffer.readUint16BE(index / 8);
 	index += 16;
 
-	const additional = buffer.readUint16BE(index / 8);
+	const additionalResources = buffer.readUint16BE(index / 8);
 	index += 16;
 
 	const request = {
 		identifier,
-		type,
-		operation,
+		isResponse,
+		operationCode,
 		flag: {
-			authorized,
-			truncated,
-			recursionDesired,
-			recursionAvailable,
-			authenticData,
-			checkingDisabled,
+			isAuthorized,
+			isTruncated,
+			isRecursionDesired,
+			isRecursionAvailable,
 		},
 		responseCode,
 		count: {
-			query,
+			question,
 			answer,
 			nameserver,
-			additional,
+			additionalResources,
 		},
 	};
 
 	return [index, request] as const;
 };
 
-export type TRequest = ReturnType<typeof header>[1]
+export type THeader = ReturnType<typeof header>[1]
 
 /**
  * Read an arbitrary text from buffer ending with null terminator
@@ -107,16 +101,16 @@ export const questionSection = (buffer: Buffer, offset: number) => {
 	const [position, domain] = readArbitraryText(buffer, index);
 	index = position;
 
-	const record: EResourceRecordType = buffer.readUint16BE(index);
+	const type: EResourceRecord = buffer.readUint16BE(index);
 	index += 2;
 
-	const unit: EClassType = buffer.readUint16BE(index);
+	const _class: EClass = buffer.readUint16BE(index);
 	index += 2;
 
 	const question = {
-		record,
 		domain,
-		unit,
+		type,
+		class: _class,
 	};
 
 	return [index * 8, question] as const;
@@ -127,14 +121,14 @@ export type TQuestionSection = ReturnType<typeof questionSection>[1]
 // Reference: https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.3
 export interface IResourceRecord {
 	domain: string,
-	type: EResourceRecordType,
-	unit: EClassType,
+	type: EResourceRecord,
+	unit: EClass,
 	ttl: number,
 	resourceDataLength: number,
 }
 
 export interface IResourceRecordOfA extends IResourceRecord {
-	type: EResourceRecordType.A,
+	type: EResourceRecord.A,
 	resourceData: [number, number, number, number]
 }
 
@@ -146,10 +140,10 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 	const [afterDomain, domain] = readArbitraryText(buffer, index);
 	index = afterDomain;
 
-	const type: EResourceRecordType = buffer.readUint16BE(index);
+	const type: EResourceRecord = buffer.readUint16BE(index);
 	index += 2;
 
-	const unit: EClassType = buffer.readUint16BE(index);
+	const unit: EClass = buffer.readUint16BE(index);
 	index += 2;
 
 	const ttl = buffer.readUint32BE(index);
@@ -167,7 +161,7 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 	} as const;
 
 	switch (type) {
-		case EResourceRecordType.A: {
+		case EResourceRecord.A: {
 			if (resourceDataLength !== 32) {
 				throw new Error('The RDLENGTH field of A record should be 32!');
 			}
@@ -183,7 +177,7 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 				index * 8,
 				{
 					...resourceRecord,
-					type: EResourceRecordType.A,
+					type: EResourceRecord.A,
 					resourceData,
 				} as const,
 			] as const;
@@ -197,3 +191,59 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
  * This type is used to get fully typed output of resourceRecord function instead of a pre-defined set with the resourceRecordData standards.
  */
 export type TArbitraryResourceRecord = ReturnType<typeof resourceRecord>[1]
+
+export const request = (buffer: Buffer) => {
+	const [afterHeader, meta] = header(buffer);
+
+	const questions: TQuestionSection[] = [];
+	let afterQuestions = afterHeader;
+
+	for (let i = 0; i < meta.count.question; i++) {
+		const [nextOffset, question] = questionSection(buffer, afterQuestions);
+
+		questions.push(question);
+		afterQuestions = nextOffset;
+	}
+
+	const answers: TResourceRecord[] = [];
+	let afterAnswers = afterQuestions;
+
+	for (let i = 0; i < meta.count.answer; i++) {
+		const [nextOffset, answer] = resourceRecord(buffer, afterAnswers);
+
+		answers.push(answer as TResourceRecord);
+		afterAnswers = nextOffset;
+	}
+
+	const nameservers: TResourceRecord[] = [];
+	let afterNameservers = afterAnswers;
+
+	for (let i = 0; i < meta.count.nameserver; i++) {
+		const [nextOffset, answer] = resourceRecord(buffer, afterAnswers);
+
+		nameservers.push(answer as TResourceRecord);
+		afterNameservers = nextOffset;
+	}
+
+	const additionalResources: TResourceRecord[] = [];
+	let afterAdditionalResources = afterNameservers;
+
+	for (let i = 0; i < meta.count.additionalResources; i++) {
+		const [nextOffset, answer] = resourceRecord(buffer, afterAnswers);
+
+		additionalResources.push(answer as TResourceRecord);
+		afterAdditionalResources = nextOffset;
+	}
+
+	const _request = {
+		header: meta,
+		questions,
+		answers,
+		nameservers,
+		additionalResources,
+	} as const;
+
+	return [afterAdditionalResources, _request] as const;
+};
+
+export type TRequest = ReturnType<typeof request>
