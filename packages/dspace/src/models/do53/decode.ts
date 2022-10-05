@@ -1,23 +1,5 @@
+import {pick, range} from 'buffertly';
 import {EClassType, EFlagType, EOperationType, EQueryType, EResourceRecordType, EResponseType} from './definition.js';
-
-/**
- * Read a single bit from buffer
- * @param buffer The buffer object
- * @param offset The offset in bits
- */
-export const pick = (buffer: Buffer, offset: number): number => (buffer[offset >> 3] >> (7 - offset & 7)) & 1;
-
-export const range = (buffer: Buffer, offset: number, size: number): number => {
-	let value = 0x0;
-
-	for (let i = 0; i < size; i++) {
-		if (pick(buffer, offset + i)) {
-			value |= 2 ** i;
-		}
-	}
-
-	return value;
-};
 
 // Reference: https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.1
 export const header = (buffer: Buffer) => {

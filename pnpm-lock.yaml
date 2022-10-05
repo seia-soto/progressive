@@ -31,7 +31,10 @@ importers:
       typescript: 4.8.4
 
   packages/dspace:
-    specifiers: {}
+    specifiers:
+      buffertly: link:../buffertly
+    dependencies:
+      buffertly: link:../buffertly
 
   packages/filter:
     specifiers: {}

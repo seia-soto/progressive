@@ -20,5 +20,8 @@
     "nodeArguments": [
       "--loader=ts-node/esm"
     ]
+  },
+  "dependencies": {
+    "buffertly": "link:../buffertly"
   }
 }
