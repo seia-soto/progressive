@@ -1,6 +1,6 @@
 {
   "name": "buffertly",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Buffertly is a dead simple utility to play with octets over network.",
   "main": "out/index.js",
   "type": "module",

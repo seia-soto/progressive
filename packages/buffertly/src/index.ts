@@ -5,7 +5,7 @@
  */
 export const octets = (fragments: (readonly [number, number])[]) => {
 	const buffer: number[] = [];
-	let octet = 0o0;
+	let octet = 0; // This won't be used
 	let count = 0;
 
 	for (let i = 0; i < fragments.length; i++) {
@@ -13,12 +13,12 @@ export const octets = (fragments: (readonly [number, number])[]) => {
 
 		for (let i = size - 1; i >= 0; i--) {
 			if (!(count % 8)) {
-				buffer.push(octet & 0xFF);
+				buffer.push(octet);
 				octet = 0o0;
 			}
 
 			if (data & (2 ** i)) {
-				octet |= 2 ** (i - (Math.floor(i / 8) * 8));
+				octet |= (2 ** (7 - (count % 8)));
 			}
 
 			count++;
