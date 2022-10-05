@@ -10,6 +10,12 @@ import {EClass, EFlag, EOperationCode, EQueryOrResponse, EResourceRecord, ERespo
 export const readArbitraryLabel = (buffer: Buffer, offset: number, size: number = 65535) => {
 	let index = offset;
 	let text = '';
+	let restorationPoint = 0;
+
+	if ((pick(buffer, index) + pick(buffer, index + 1)) === 2) {
+		restorationPoint = index + 16;
+		index = range(buffer, index + 2, 14);
+	}
 
 	for (let k = 0; k < size; k++) {
 		const labelSize = range(buffer, index, 8);
@@ -27,6 +33,10 @@ export const readArbitraryLabel = (buffer: Buffer, offset: number, size: number 
 
 			text += String.fromCharCode(charCode);
 		}
+	}
+
+	if (restorationPoint) { // When restorationPoint set, it's always starts from 16.
+		index = restorationPoint;
 	}
 
 	return [index, text.slice(1)] as const;
