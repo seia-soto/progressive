@@ -537,4 +537,4 @@ export const request = (buffer: Buffer) => {
 	return [afterAdditionalResources, _request] as const;
 };
 
-export type TRequest = ReturnType<typeof request>
+export type TRequest = ReturnType<typeof request>[1]

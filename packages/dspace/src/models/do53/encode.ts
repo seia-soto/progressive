@@ -202,7 +202,10 @@ export const resourceRecord = (data: TResourceRecord) => {
 export const request = (
 	_header: THeader,
 	fields: {
-		questions: TQuestionSection[], answers: TResourceRecord[], nameservers: TResourceRecord[], additionalResources: TResourceRecord[]
+		questions: TQuestionSection[],
+		answers: TResourceRecord[],
+		nameservers: TResourceRecord[],
+		additionalResources: TResourceRecord[]
 	},
 ) => {
 	const {questions, answers, nameservers, additionalResources} = fields;
