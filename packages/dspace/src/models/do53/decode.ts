@@ -276,6 +276,10 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 	switch (type) {
 		case EResourceRecord.A:
 		{
+			if (unit !== EClass.Internet) {
+				throw new Error('An A resource record only accepts EClass.Internet!');
+			}
+
 			const resourceData = [
 				range(buffer, index, 8),
 				range(buffer, index + 8, 8),
