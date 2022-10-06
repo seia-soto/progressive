@@ -40,7 +40,6 @@ export const create = () => {
 						type: EResourceRecord.A,
 						unit: EClass.Internet,
 						ttl: 60,
-						resourceDataLength: 32,
 						resourceData: [127, 0, 0, 1],
 					},
 				],

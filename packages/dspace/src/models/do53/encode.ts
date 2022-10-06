@@ -136,7 +136,7 @@ export const resourceRecord = (data: TResourceRecord) => {
 			const representativeName = writeLabelsToOctetFragment(data.resourceData.representativeName);
 
 			fragments.push(
-				[mainDomain.length + representativeName.length + (32 * 5), 16],
+				[mainDomain.length + representativeName.length + (4 * 5), 16],
 				...mainDomain,
 				...representativeName,
 				[data.resourceData.serial, 32],
@@ -156,6 +156,36 @@ export const resourceRecord = (data: TResourceRecord) => {
 			fragments.push(
 				[txtData.length, 16],
 				...txtData,
+			);
+
+			break;
+		}
+
+		case EResourceRecord.WKS:
+		{
+			const portMap: (readonly [number, number])[] = [];
+			let bits = 0;
+
+			for (let i = 0; i < 65535; i++) {
+				if (data.resourceData.ports.indexOf(i) >= 0) {
+					portMap.push([1, 1]);
+
+					if (
+						++bits === data.resourceData.ports.length
+						|| bits > 65495 // 65535 - 32 - 8
+					) {
+						break;
+					}
+				} else {
+					portMap.push([0, 1]);
+				}
+			}
+
+			fragments.push(
+				[4 + 1 + Math.ceil(bits / 8), 16],
+				...data.resourceData.address.map(entry => [entry, 8] as const),
+				[data.resourceData.protocol, 8],
+				...portMap,
 			);
 
 			break;

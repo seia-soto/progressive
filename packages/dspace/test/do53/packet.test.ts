@@ -1,7 +1,7 @@
 import test from 'ava';
 import {octets} from 'buffertly';
 import * as decode from '../../src/models/do53/decode.js';
-import {EClass, EFlag, EOperationCode, EQueryOrResponse, EResourceRecord, EResponseCode} from '../../src/models/do53/definition.js';
+import {EClass, EFlag, EOperationCode, EProtocol, EQueryOrResponse, EResourceRecord, EResponseCode} from '../../src/models/do53/definition.js';
 import * as encode from '../../src/models/do53/encode.js';
 
 const domain = 'domain.tld';
@@ -150,6 +150,18 @@ const resourceRecordOfSoa: decode.IResourceRecordOfSoa = {
 	},
 };
 
+const resourceRecordOfWks: decode.IResourceRecordOfWks = {
+	domain,
+	type: EResourceRecord.WKS,
+	unit: EClass.Internet,
+	ttl: 60,
+	resourceData: {
+		address: [127, 0, 0, 1],
+		protocol: EProtocol.TCP,
+		ports: [25],
+	},
+};
+
 test('resourceRecord', async t => {
 	const targets = [
 		resourceRecordOfA,
@@ -164,6 +176,7 @@ test('resourceRecord', async t => {
 		resourceRecordOfNs,
 		resourceRecordOfPtr,
 		resourceRecordOfSoa,
+		resourceRecordOfWks,
 	];
 	const generateResponse = (rr: decode.TResourceRecord) => decode.resourceRecord(Buffer.from(encode.resourceRecord(rr)), 0)[1];
 

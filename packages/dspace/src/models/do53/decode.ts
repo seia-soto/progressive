@@ -1,5 +1,5 @@
 import {pick, range} from 'buffertly';
-import {EClass, EFlag, EOperationCode, EQueryOrResponse, EResourceRecord, EResponseCode} from './definition.js';
+import {EClass, EFlag, EOperationCode, EProtocol, EQueryOrResponse, EResourceRecord, EResponseCode} from './definition.js';
 
 /**
  * Read an arbitrary labels from buffer ending with null terminator
@@ -150,7 +150,7 @@ export const questionSection = (buffer: Buffer, offset: number) => {
 		class: _class,
 	};
 
-	return [index * 8, question] as const;
+	return [index, question] as const;
 };
 
 export type TQuestionSection = ReturnType<typeof questionSection>[1]
@@ -238,6 +238,15 @@ export interface IResourceRecordOfSoa extends IResourceRecord {
 export interface IResourceRecordOfTxt extends IResourceRecord {
 	type: EResourceRecord.TXT,
 	resourceData: string
+}
+
+export interface IResourceRecordOfWks extends IResourceRecord {
+	type: EResourceRecord.WKS,
+	resourceData: {
+		address: [number, number, number, number],
+		protocol: EProtocol,
+		ports: number[]
+	}
 }
 
 /**
@@ -393,19 +402,19 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 
 			return [
 				index + 32,
-					{
-						...resourceRecord,
-						type,
-						resourceData: {
-							mainDomain,
-							representativeName,
-							serial,
-							refreshIn,
-							retryIn,
-							expireIn,
-							minimumTtl,
-						},
-					} as IResourceRecordOfSoa,
+				{
+					...resourceRecord,
+					type,
+					resourceData: {
+						mainDomain,
+						representativeName,
+						serial,
+						refreshIn,
+						retryIn,
+						expireIn,
+						minimumTtl,
+					},
+				} as IResourceRecordOfSoa,
 			] as const;
 		}
 
@@ -423,10 +432,51 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 			] as const;
 		}
 
-		default: {
-			throw new Error('This resource record is not supported yet!');
+		case EResourceRecord.WKS:
+		{
+			const address = [
+				range(buffer, index, 8),
+				range(buffer, index + 8, 8),
+				range(buffer, index + 16, 8),
+				range(buffer, index + 24, 8),
+			];
+			index += 32;
+
+			const protocol = range(buffer, index, 8);
+			index += 8;
+
+			const ports: number[] = [];
+
+			for (let i = 0; i < 65536; i++) {
+				try {
+					if (pick(buffer, index++)) {
+						ports.push(i);
+					}
+				// eslint-disable-next-line no-unused-vars
+				} catch (error) {
+					break;
+				}
+			}
+
+			return [
+				Math.ceil(index / 8) * 8, // Normalize the length of dynamic bitmap.
+				{
+					...resourceRecord,
+					type,
+					resourceData: {
+						address,
+						protocol,
+						ports,
+					},
+				} as IResourceRecordOfWks,
+			] as const;
 		}
 	}
+
+	return [
+		index + (resourceDataLength * 8),
+		resourceRecord,
+	] as const;
 };
 
 /**

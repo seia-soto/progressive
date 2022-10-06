@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-vars */
-// Header
 export const enum EQueryOrResponse {
   Query = 0,
   Response
@@ -66,4 +65,50 @@ export const enum EClass {
   Internet = 1,
   Chaos = 3,
   Hesiod,
+}
+
+// https://datatracker.ietf.org/doc/html/rfc1010
+export const enum EProtocol {
+  ICMP = 0,
+  IGMP,
+  GGP,
+  ST = 5,
+  TCP,
+  UCL,
+  EGP,
+  IGP,
+  BBNRCCMON,
+  NVPII,
+  PUP,
+  ARGUS,
+  EMON,
+  XNET,
+  CHAOS,
+  UDP,
+  MUX,
+  CDNMEAS,
+  HMP,
+  PRM,
+  XNSIDP,
+  TRUNK1,
+  TRUNK2,
+  LEAF1,
+  LEAF2,
+  RDP,
+  IRTP,
+  ISOTP4,
+  NETBLT,
+  MFENSP,
+  SEP,
+  CFTP = 62,
+  LOCALNET,
+  SATEXPAK,
+  MITSUBMIT,
+  RVD,
+  IPPC,
+  SATMON = 69,
+  IPCV,
+  BRSATMON = 76,
+  WBMON = 78,
+  WBEXPAK
 }
