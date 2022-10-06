@@ -161,7 +161,6 @@ export interface IResourceRecord {
 	type: EResourceRecord,
 	unit: EClass,
 	ttl: number,
-	resourceDataLength: number,
 }
 
 export interface IResourceRecordOfA extends IResourceRecord {
@@ -223,6 +222,24 @@ export interface IResourceRecordOfPtr extends IResourceRecord {
 	resourceData: string
 }
 
+export interface IResourceRecordOfSoa extends IResourceRecord {
+	type: EResourceRecord.SOA,
+	resourceData: {
+		mainDomain: string,
+		representativeName: string,
+		serial: number,
+		refreshIn: number,
+		retryIn: number,
+		expireIn: number,
+		minimumTtl: number
+	}
+}
+
+export interface IResourceRecordOfTxt extends IResourceRecord {
+	type: EResourceRecord.TXT,
+	resourceData: string
+}
+
 /**
  * Note that NULL record is not handled.
  */
@@ -230,17 +247,6 @@ export interface IResourceRecordOfNull extends IResourceRecord {
 	type: EResourceRecord.NULL,
 	resourceData: number[]
 }
-
-export type TResourceRecord = IResourceRecordOfA
-	| IResourceRecordOfCname
-  | IResourceRecordOfHinfo
-	| IResourceRecordOfMb
-	| IResourceRecordOfMg
-	| IResourceRecordOfMinfo
-	| IResourceRecordOfMr
-	| IResourceRecordOfMx
-	| IResourceRecordOfNs
-	| IResourceRecordOfPtr
 
 export const resourceRecord = (buffer: Buffer, offset: number) => {
 	let index = offset;
@@ -265,29 +271,23 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 		type,
 		unit,
 		ttl,
-		resourceDataLength,
 	} as const;
 
 	switch (type) {
 		case EResourceRecord.A:
 		{
-			if (resourceDataLength !== 4) {
-				throw new Error('The RDLENGTH field of A record should be 4!');
-			}
-
 			const resourceData = [
 				range(buffer, index, 8),
 				range(buffer, index + 8, 8),
 				range(buffer, index + 16, 8),
 				range(buffer, index + 24, 8),
 			];
-			index += 32;
 
 			return [
-				index,
+				index + 32,
 				{
 					...resourceRecord,
-					type: EResourceRecord.A,
+					type,
 					resourceData,
 				} as IResourceRecordOfA,
 			] as const;
@@ -301,15 +301,14 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 		case EResourceRecord.PTR:
 		{
 			const [afterResourceData, resourceData] = readArbitraryLabel(buffer, index);
-			index = afterResourceData;
 
 			return [
-				index,
+				afterResourceData,
 				{
 					...resourceRecord,
-					type: EResourceRecord.CNAME,
+					type,
 					resourceData,
-				} as IResourceRecordOfCname,
+				} as IResourceRecordOfCname | IResourceRecordOfMb | IResourceRecordOfMg | IResourceRecordOfMr | IResourceRecordOfNs | IResourceRecordOfPtr,
 			] as const;
 		}
 
@@ -317,13 +316,12 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 		{
 			const [afterCpu, cpu] = readArbitraryText(buffer, index, resourceDataLength);
 			const [afterOperatingSystem, operatingSystem] = readArbitraryText(buffer, afterCpu, resourceDataLength);
-			index = afterOperatingSystem;
 
 			return [
-				index,
+				afterOperatingSystem,
 				{
 					...resourceRecord,
-					type: EResourceRecord.HINFO,
+					type,
 					resourceData: {
 						cpu,
 						operatingSystem,
@@ -331,15 +329,106 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 				} as IResourceRecordOfHinfo,
 			] as const;
 		}
-	}
 
-	return [index * 8, resourceRecord] as const;
+		case EResourceRecord.MINFO:
+		{
+			const [afterRmailbox, rmailbox] = readArbitraryLabel(buffer, index);
+			const [afterEmailbox, emailbox] = readArbitraryLabel(buffer, afterRmailbox);
+
+			return [
+				afterEmailbox,
+				{
+					...resourceRecord,
+					type,
+					resourceData: {
+						receiveMailbox: rmailbox,
+						errorMailbox: emailbox,
+					},
+				} as IResourceRecordOfMinfo,
+			] as const;
+		}
+
+		case EResourceRecord.MX:
+		{
+			const preference = range(buffer, index, 16);
+			index += 16;
+
+			const [afterDomain, domain] = readArbitraryLabel(buffer, index);
+
+			return [
+				afterDomain,
+				{
+					...resourceRecord,
+					type,
+					resourceData: {
+						preference,
+						domain,
+					},
+				} as IResourceRecordOfMx,
+			] as const;
+		}
+
+		case EResourceRecord.SOA:
+		{
+			const [afterMainDomain, mainDomain] = readArbitraryLabel(buffer, index);
+			const [afterRepresentativeName, representativeName] = readArbitraryLabel(buffer, afterMainDomain);
+
+			const serial = range(buffer, afterRepresentativeName, 32);
+			index = afterRepresentativeName + 32;
+
+			const refreshIn = range(buffer, index, 32);
+			index += 32;
+
+			const retryIn = range(buffer, index, 32);
+			index += 32;
+
+			const expireIn = range(buffer, index, 32);
+			index += 32;
+
+			const minimumTtl = range(buffer, index, 32);
+
+			return [
+				index + 32,
+					{
+						...resourceRecord,
+						type,
+						resourceData: {
+							mainDomain,
+							representativeName,
+							serial,
+							refreshIn,
+							retryIn,
+							expireIn,
+							minimumTtl,
+						},
+					} as IResourceRecordOfSoa,
+			] as const;
+		}
+
+		case EResourceRecord.TXT:
+		{
+			const [afterResourceData, resourceData] = readArbitraryText(buffer, index);
+
+			return [
+				afterResourceData,
+				{
+					...resourceRecord,
+					type,
+					resourceData,
+				} as IResourceRecordOfTxt,
+			] as const;
+		}
+
+		default: {
+			throw new Error('This resource record is not supported yet!');
+		}
+	}
 };
 
 /**
  * This type is used to get fully typed output of resourceRecord function instead of a pre-defined set with the resourceRecordData standards.
  */
-export type TArbitraryResourceRecord = ReturnType<typeof resourceRecord>[1]
+export type TResourceRecord = ReturnType<typeof resourceRecord>[1]
 
 export const request = (buffer: Buffer) => {
 	const [afterHeader, meta] = header(buffer);

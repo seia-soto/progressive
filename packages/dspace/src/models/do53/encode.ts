@@ -1,5 +1,5 @@
 import {octets} from 'buffertly';
-import {IResourceRecord, THeader, TQuestionSection, TResourceRecord} from './decode.js';
+import {THeader, TQuestionSection, TResourceRecord} from './decode.js';
 import {EResourceRecord} from './definition.js';
 
 export const writeStringToOctetFragment = (text: string) => {
@@ -130,10 +130,39 @@ export const resourceRecord = (data: TResourceRecord) => {
 			break;
 		}
 
-		default: {
-			fragments.push([(data as IResourceRecord).resourceDataLength, 16]);
+		case EResourceRecord.SOA:
+		{
+			const mainDomain = writeLabelsToOctetFragment(data.resourceData.mainDomain);
+			const representativeName = writeLabelsToOctetFragment(data.resourceData.representativeName);
+
+			fragments.push(
+				[mainDomain.length + representativeName.length + (32 * 5), 16],
+				...mainDomain,
+				...representativeName,
+				[data.resourceData.serial, 32],
+				[data.resourceData.refreshIn, 32],
+				[data.resourceData.retryIn, 32],
+				[data.resourceData.expireIn, 32],
+				[data.resourceData.minimumTtl, 32],
+			);
 
 			break;
+		}
+
+		case EResourceRecord.TXT:
+		{
+			const txtData = writeStringToOctetFragment(data.resourceData);
+
+			fragments.push(
+				[txtData.length, 16],
+				...txtData,
+			);
+
+			break;
+		}
+
+		default: {
+			throw new Error('This resource record is not supported yet!');
 		}
 	}
 
