@@ -160,7 +160,7 @@ export interface IResourceRecord {
 	domain: string,
 	type: EResourceRecord,
 	unit: EClass,
-	ttl: number,
+	ttl: number
 }
 
 export interface IResourceRecordOfA extends IResourceRecord {
@@ -471,17 +471,16 @@ export const resourceRecord = (buffer: Buffer, offset: number) => {
 				} as IResourceRecordOfWks,
 			] as const;
 		}
-	}
 
-	return [
-		index + (resourceDataLength * 8),
-		resourceRecord,
-	] as const;
+		default: {
+			return [
+				index + (resourceDataLength * 8),
+				resourceRecord as IResourceRecord,
+			] as never;
+		}
+	}
 };
 
-/**
- * This type is used to get fully typed output of resourceRecord function instead of a pre-defined set with the resourceRecordData standards.
- */
 export type TResourceRecord = ReturnType<typeof resourceRecord>[1]
 
 export const request = (buffer: Buffer) => {
