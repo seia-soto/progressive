@@ -5,7 +5,7 @@
   "main": "out/index.js",
   "type": "module",
   "scripts": {
-    "build": "swc src -d out --config-file ../../.swcrc --copy-files && tsc src/index.ts --d --outDir out --emitDeclarationOnly --target es2022",
+    "build": "swc src -d out --config-file ../../.swcrc --copy-files && tsc src/index.ts -d --outDir out --emitDeclarationOnly --target es2022",
     "test": "ava"
   },
   "keywords": [],
