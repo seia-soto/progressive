@@ -1,6 +1,17 @@
 {
   "extends": "../../tsconfig.json",
-  "compilerOptions": {},
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "out",
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "baseUrl": ".",
+    "paths": {
+      "buffertly": [
+        "../buffertly/out"
+      ]
+    },
+  },
   "ts-node": {
     "compilerOptions": {
       "module": "ES2020",
@@ -8,5 +19,6 @@
     },
     "files": true,
     "swc": true
-  }
+  },
+  "include": ["src/**/*"],
 }

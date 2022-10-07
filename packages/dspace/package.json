@@ -1,13 +1,12 @@
 {
   "name": "dspace",
-  "version": "1.0.0",
+  "version": "0.0.1",
+  "description": "Dspace is a simple layer to handle DNS packet.",
   "main": "out/index.js",
   "type": "module",
   "scripts": {
-    "tsc": "tsc",
-    "test": "ava",
-    "build": "swc src -d out --config-file ../../.swcrc --copy-files",
-    "start": "node out/bin.js"
+    "build": "swc src -d out --config-file ../../.swcrc --copy-files && tsc -p tsconfig.json",
+    "test": "ava"
   },
   "keywords": [],
   "author": "HoJeong Go <seia@outlook.kr>",
@@ -23,5 +22,6 @@
   "dependencies": {
     "buffertly": "link:../buffertly",
     "eventemitter3": "^4.0.7"
-  }
+  },
+  "license": "MIT"
 }
