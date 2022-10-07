@@ -36,10 +36,8 @@ importers:
   packages/dspace:
     specifiers:
       buffertly: link:../buffertly
-      eventemitter3: ^4.0.7
     dependencies:
       buffertly: link:../buffertly
-      eventemitter3: 4.0.7
 
   packages/filter:
     specifiers: {}
@@ -1810,10 +1808,6 @@ packages:
   /event-target-shim/5.0.1:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
     engines: {node: '>=6'}
-    dev: false
-
-  /eventemitter3/4.0.7:
-    resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
     dev: false
 
   /events/3.3.0:

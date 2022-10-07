@@ -10,7 +10,15 @@
   },
   "keywords": [],
   "author": "HoJeong Go <seia@outlook.kr>",
-  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seia-soto/progressive",
+    "directory": "packages/dspace"
+  },
+  "dependencies": {
+    "buffertly": "link:../buffertly"
+  },
   "ava": {
     "extensions": {
       "ts": "module"
@@ -18,10 +26,5 @@
     "nodeArguments": [
       "--loader=ts-node/esm"
     ]
-  },
-  "dependencies": {
-    "buffertly": "link:../buffertly",
-    "eventemitter3": "^4.0.7"
-  },
-  "license": "MIT"
+  }
 }
