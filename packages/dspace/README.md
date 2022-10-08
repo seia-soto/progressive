@@ -25,9 +25,14 @@ The purpose of dspace is to replace existing packages handling packets inefficie
 
 # Implementation
 
-- Domain Implementation and Specification (November 1987): https://datatracker.ietf.org/doc/html/rfc1035
+Dspace is working in progress to implement [Standard and Proposed Security Standards RFC documents described in Wikipedia](https://en.wikipedia.org/wiki/Domain_Name_System#RFC_documents).
+
+- [RFC 1035] Domain Implementation and Specification (November 1987): https://datatracker.ietf.org/doc/html/rfc1035
   - Non-experimental and Non-obsolete Resource Records (except for NULL RR which is used as fallback record)
-  - Recursive resistance pointer support in labels (read and write)
+  - Recursive resistance pointer parsing support in labels
+- [RFC 1123] Requirements for Internet Hosts (October 1989) — DOMAIN NAME TRANSLATION: https://datatracker.ietf.org/doc/html/rfc1123#section-6
+  - Unused fields in a query or response message is all zero
+  - Writing pointer support in labels
 
 # API
 
