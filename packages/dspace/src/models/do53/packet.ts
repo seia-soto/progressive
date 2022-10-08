@@ -1,16 +1,31 @@
 import {octets, pick, range} from 'buffertly';
-import {EClass, EOperationCode, EQueryOrResponse, ERecord, EResourceOrder, EResponseCode, ICounts, IOptions, IPacket, IQuestion, IResource, TBuildablePacket, TBuildableQuestion, TFlag, TInternetAddress, TPart, TResources} from './definition.js';
+import {EClass, EOperationCode, EQueryOrResponse, ERecord, EResourceOrder, EResponseCode, ICounts, IOptions, IPacket, IQuestion, IResource, TBuildablePacket, TBuildableQuestion, TCompressionMap, TFlag, TInternetAddress, TPart, TResources} from './definition.js';
 
 // Pack
 export const packText = (text: string): TPart[] => text
 	.split('')
 	.map(char => [char.charCodeAt(0), 8] as const);
 
-export const packLabel = (text: string): TPart[] => {
+export const packLabel = (text: string, compressionMap: TCompressionMap): TPart[] => {
 	const parts: TPart[] = [];
 	const labels = text.split('.');
 
 	for (let i = 0; i < labels.length; i++) {
+		const compressionKey = labels.slice(i).join('.');
+
+		if (compressionMap[compressionKey]) {
+			parts.push(
+				[0b11, 2],
+				[compressionMap[compressionKey], 14],
+			);
+			compressionMap.__offset += 16;
+
+			return parts;
+		}
+
+		compressionMap[compressionKey] = compressionMap.__offset / 8;
+		compressionMap.__offset += 8 + (labels[i].length * 8);
+
 		parts.push(
 			[labels[i].length, 8],
 			...packText(labels[i]),
@@ -18,25 +33,32 @@ export const packLabel = (text: string): TPart[] => {
 	}
 
 	parts.push([0, 8]);
+	compressionMap.__offset += 8;
 
 	return parts;
 };
 
-export const packQuestion = (q: TBuildableQuestion) => [
-	...packLabel(q.name),
-	[q.type, 16],
-	[q.class ?? EClass.Internet, 16],
-] as const;
+export const packQuestion = (q: TBuildableQuestion, compressionMap: TCompressionMap) => {
+	const question = [
+		...packLabel(q.name, compressionMap),
+		[q.type, 16],
+		[q.class ?? EClass.Internet, 16],
+	] as const;
+	compressionMap.__offset += 32;
 
-export const packResource = (r: TResources) => {
+	return question;
+};
+
+export const packResource = (r: TResources, compressionMap: TCompressionMap) => {
 	const parts: TPart[] = [];
 
 	parts.push(
-		...packLabel(r.name),
+		...packLabel(r.name, compressionMap),
 		[r.type, 16],
 		[r.class ?? EClass.Internet, 16],
 		[r.ttl, 32],
 	);
+	compressionMap.__offset += 64 + 16; // Append `r.data.size` before they used
 
 	switch (r.type) {
 		case ERecord.A:
@@ -45,6 +67,7 @@ export const packResource = (r: TResources) => {
 				[r.data.size, 16],
 				...r.data.source.map(k => [k, 8] as const),
 			);
+			compressionMap.__offset += 32;
 
 			break;
 		}
@@ -53,7 +76,7 @@ export const packResource = (r: TResources) => {
 		case ERecord.NS:
 		case ERecord.PTR:
 		{
-			const label = packLabel(r.data.source);
+			const label = packLabel(r.data.source, compressionMap);
 
 			parts.push(
 				[r.data.size || label.length, 16],
@@ -74,13 +97,16 @@ export const packResource = (r: TResources) => {
 				[r.data.size || text.length, 16],
 				...text,
 			);
+			compressionMap.__offset += text.length * 8;
 
 			break;
 		}
 
 		case ERecord.MX:
 		{
-			const label = packLabel(r.data.source.exchange);
+			compressionMap.__offset += 16;
+
+			const label = packLabel(r.data.source.exchange, compressionMap);
 
 			parts.push(
 				[r.data.size || (2 + label.length), 16],
@@ -93,8 +119,8 @@ export const packResource = (r: TResources) => {
 
 		case ERecord.SOA:
 		{
-			const name = packLabel(r.data.source.name);
-			const representative = packLabel(r.data.source.representative);
+			const name = packLabel(r.data.source.name, compressionMap);
+			const representative = packLabel(r.data.source.representative, compressionMap);
 
 			parts.push(
 				[r.data.size || (name.length + representative.length + (4 * 5)), 16],
@@ -106,18 +132,20 @@ export const packResource = (r: TResources) => {
 				[r.data.source.expireIn, 32],
 				[r.data.source.ttl, 32],
 			);
+			compressionMap.__offset += 32 * 5;
 
 			break;
 		}
 
 		case ERecord.TXT:
 		{
-			const text = packText(r.data.source);
+			const text = packText(r.data.source + '\0');
 
 			parts.push(
 				[r.data.size || text.length, 16],
 				...text,
 			);
+			compressionMap.__offset += text.length * 8;
 
 			break;
 		}
@@ -148,6 +176,7 @@ export const packResource = (r: TResources) => {
 				[r.data.source.protocol, 8],
 				...map,
 			);
+			compressionMap.__offset += 16 + 32 + 8 + pushed;
 
 			break;
 		}
@@ -187,10 +216,11 @@ export const pack = (a: TBuildablePacket): Buffer => {
 		[],
 	];
 	const counts = [0, 0, 0];
+	const compressionMap: TCompressionMap = {__offset: 96}; // Header ends after 96 bits
 
 	// Add question sections
 	for (let i = 0; i < questions.length; i++) {
-		records.push(...packQuestion(questions[i]));
+		records.push(...packQuestion(questions[i], compressionMap));
 	}
 
 	// Sections at here are Answer, Authority, Additional
@@ -207,7 +237,7 @@ export const pack = (a: TBuildablePacket): Buffer => {
 		r.class ??= EClass.Internet;
 
 		counts[r.order]++;
-		sections[r.order].push(...packResource(r as TResources));
+		sections[r.order].push(...packResource(r as TResources, compressionMap));
 	}
 
 	// Add sections' data
@@ -218,27 +248,36 @@ export const pack = (a: TBuildablePacket): Buffer => {
 	);
 
 	// Compose
-	const b: TPart[] = [
+	const composed: TPart[] = [
 		...header,
 		...[questions.length, ...counts].map(count => [count, 16] as const),
 		...records,
 	];
 
-	return Buffer.from(octets(b));
+	return Buffer.from(octets(composed));
 };
 
 // Unpack
-export const unpackLabel = (buffer: Buffer, offset: number) => {
+export const unpackLabel = (buffer: Buffer, offset: number, jump: number = 0) => {
 	const labels: string[] = [];
-	let restoreTo = 0;
 
-	if (range(buffer, offset, 2) === 0b11) {
-		restoreTo = offset + 16;
-		offset = range(buffer, offset + 2, 14) * 8;
+	if (jump > 1) {
+		return [offset, ''] as const;
 	}
 
 	for (; ;) {
 		const size = range(buffer, offset, 8);
+
+		if ((size & 0xC0) === 0xC0) {
+			const pointer = range(buffer, offset + 2, 14) * 8;
+			const [, label] = unpackLabel(buffer, pointer, jump++);
+
+			labels.push(label);
+			offset += 16;
+
+			break;
+		}
+
 		offset += 8;
 
 		if (!size) {
@@ -255,7 +294,7 @@ export const unpackLabel = (buffer: Buffer, offset: number) => {
 		labels.push(part);
 	}
 
-	return [restoreTo || offset, labels.join('.')] as const;
+	return [offset, labels.join('.')] as const;
 };
 
 export const unpackText = (buffer: Buffer, offset: number) => {

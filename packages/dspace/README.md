@@ -27,7 +27,7 @@ The purpose of dspace is to replace existing packages handling packets inefficie
 
 - Domain Implementation and Specification (November 1987): https://datatracker.ietf.org/doc/html/rfc1035
   - Non-experimental and Non-obsolete Resource Records (except for NULL RR which is used as fallback record)
-  - One dimension pointer support in labels (read-only)
+  - Recursive resistance pointer support in labels (read and write)
 
 # API
 
@@ -87,13 +87,13 @@ unpack(buffer: Buffer): IPacket
 
 ```typescript
 /// <reference types="node" />
-import { EClass, ERecord, EResourceOrder, IPacket, IQuestion, TBuildablePacket, TBuildableQuestion, TPart, TResources } from './definition.js';
+import { EClass, ERecord, EResourceOrder, IPacket, IQuestion, TBuildablePacket, TBuildableQuestion, TCompressionMap, TPart, TResources } from './definition.js';
 export declare const packText: (text: string) => TPart[];
-export declare const packLabel: (text: string) => TPart[];
-export declare const packQuestion: (q: TBuildableQuestion) => readonly [...TPart[], readonly [ERecord, 16], readonly [EClass, 16]];
-export declare const packResource: (r: TResources) => TPart[];
+export declare const packLabel: (text: string, compressionMap: TCompressionMap) => TPart[];
+export declare const packQuestion: (q: TBuildableQuestion, compressionMap: TCompressionMap) => readonly [...TPart[], readonly [ERecord, 16], readonly [EClass, 16]];
+export declare const packResource: (r: TResources, compressionMap: TCompressionMap) => TPart[];
 export declare const pack: (a: TBuildablePacket) => Buffer;
-export declare const unpackLabel: (buffer: Buffer, offset: number) => readonly [number, string];
+export declare const unpackLabel: (buffer: Buffer, offset: number, jump?: number) => readonly [number, string];
 export declare const unpackText: (buffer: Buffer, offset: number) => readonly [number, string];
 export declare const unpackQuestion: (buffer: Buffer, offset: number) => readonly [number, IQuestion];
 export declare const unpackResource: (buffer: Buffer, offset: number, order?: EResourceOrder) => readonly [number, TResources];
@@ -292,11 +292,15 @@ export interface IBuildablePacketOverrides extends Omit<IPacket, TBuildablePacke
 }
 export declare type TNecessaryPacketParameters = 'isQueryOrResponse';
 export declare type TBuildablePacket = Pick<IBuildablePacketOverrides, TNecessaryPacketParameters> & Partial<Omit<IBuildablePacketOverrides, TNecessaryPacketParameters>>;
+export declare type TCompressionMap = Record<string, number> & {
+    __offset: number;
+};
 ```
 
 ### `dspace.do53.packet.packText`
 
-Pack text into `TPart[]` appending the null terminator at the end.
+Pack text into `TPart[]`.
+You need to manually append the null terminator at the end using `yourText + '\0'`.
 
 ```ts
 packText('text')
@@ -304,12 +308,11 @@ packText('text')
 
 ### `dspace.do53.packet.packLabel`
 
-**We don't support writing pointers at this time.**
-
-Pack domain name into `TPart[]` appending the null terminator at the end.
+Pack domain name into `TPart[]`.
+Also, you need to give `TCompressionMap` to perform compress, otherwise just pass `{__offset: 0}`.
 
 ```ts
-packLabel('domain.tld')
+packLabel('domain.tld', {__offset: 0})
 ```
 
 The label is used to represent the domain name in DNS packet consisted with series of octets — The length of label and text.
@@ -336,6 +339,8 @@ The length of the line in the following graph is 16 bits.
 Pack question section into `TPart[]`.
 In case, you can skip defining the `class` property as this method supports `TBuildableQuestion`.
 
+The passed compression map will be drilled into `packLabel` method.
+
 ```ts
 const buildableQuestion: TBuildableQuestion = {
   name: 'domain.tld',
@@ -343,13 +348,15 @@ const buildableQuestion: TBuildableQuestion = {
   // class: EClass.Internet
 }
 
-packQuestion(buildableQuestion)
+packQuestion(buildableQuestion, {__offset: 0})
 ```
 
 ### `dspace.do53.packet.packResource`
 
 Pack RR(Resource Record) into `TPart[]`.
 In case, you can skip defining the `class` property and force it as to be `TResource` instead of `TBuildableResource`.
+
+The passed compression map will be drilled into `packLabel` method.
 
 ```ts
 const resource: TResource = {
@@ -364,7 +371,7 @@ const resource: TResource = {
   }
 }
 
-packResource(resource /* as TResource */)
+packResource(resource /* as TResource */, {__offset: 0})
 ```
 
 ### `dspace.do53.packet.pack`

@@ -238,3 +238,6 @@ export type TNecessaryPacketParameters = 'isQueryOrResponse'
 
 export type TBuildablePacket = Pick<IBuildablePacketOverrides, TNecessaryPacketParameters>
   & Partial<Omit<IBuildablePacketOverrides, TNecessaryPacketParameters>>
+
+// External notion
+export type TCompressionMap = Record<string, number> & { __offset: number }

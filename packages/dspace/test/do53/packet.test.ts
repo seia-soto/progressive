@@ -15,7 +15,7 @@ test('text', async t => {
 const label = 'domain.tld';
 
 test('label', async t => {
-	const packed = Buffer.from(octets(packLabel(label)));
+	const packed = Buffer.from(octets(packLabel(label, {__offset: 0})));
 
 	t.is(label, unpackLabel(packed, 0)[1]);
 });
@@ -70,6 +70,10 @@ test('@1.1.1.2 cloudflare.com', async t => {
 				{
 					type: ERecord.A,
 					name: 'cloudflare.com',
+				},
+				{
+					type: ERecord.A,
+					name: 'speed.cloudflare.com',
 				},
 			],
 			options: {
