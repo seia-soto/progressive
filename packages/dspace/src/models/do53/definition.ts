@@ -9,10 +9,13 @@ export const enum EQueryOrResponse {
   Response
 }
 
+// Reference: https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml
 export const enum EOperationCode {
   Query = 0,
   InverseQuery,
-  ServerStatus
+  ServerStatus,
+  Notify = 4,
+  Update
 }
 
 export const enum EResponseCode {
@@ -21,7 +24,12 @@ export const enum EResponseCode {
   ServerFailure,
   NameError,
   NotImplemented,
-  Refused
+  Refused,
+  YxDomain = 6,
+  YxRrSet,
+  NxRrSet,
+  NotAuthorized,
+  NotZone
 }
 
 export interface IOptions {
@@ -68,7 +76,8 @@ export const enum ERecord {
 export const enum EClass {
   Internet = 1,
   Chaos = 3,
-  Hesiod
+  Hesiod,
+  None = 254
 }
 
 export interface IQuestion {
@@ -219,6 +228,10 @@ export interface IPacket extends IHeader {
   resources: TResources[]
 }
 
+export interface IUpdatePacket extends Omit<IPacket, 'options'> {
+  questions: (Omit<IQuestion, 'type'> & {type: ERecord.SOA})[],
+}
+
 // Parameters
 export type TOptionalResourcesClassField = Partial<{ class: EClass }>
 
@@ -229,15 +242,14 @@ export type TBuildableResource = Omit<TResources, 'class'> & TOptionalResourcesC
 export type TBuildablePacketOverridingParameters = 'options' | 'questions' | 'resources'
 
 export interface IBuildablePacketOverrides extends Omit<IPacket, TBuildablePacketOverridingParameters> {
-  options: Partial<IOptions>
-  questions: TBuildableQuestion[]
+  options: Partial<IOptions>,
+  questions: TBuildableQuestion[],
   resources: TBuildableResource[]
 }
 
 export type TNecessaryPacketParameters = 'isQueryOrResponse'
 
-export type TBuildablePacket = Pick<IBuildablePacketOverrides, TNecessaryPacketParameters>
-  & Partial<Omit<IBuildablePacketOverrides, TNecessaryPacketParameters>>
+export type TBuildablePacket = Pick<IBuildablePacketOverrides, TNecessaryPacketParameters> & Partial<Omit<IBuildablePacketOverrides, TNecessaryPacketParameters>>
 
 // External notion
 export type TCompressionMap = Record<string, number> & { __offset: number }

@@ -19,6 +19,7 @@ The purpose of dspace is to replace existing packages handling packets inefficie
     - [`dspace.do53.packet.unpackQuestion`](#dspacedo53packetunpackquestion)
     - [`dspace.do53.packet.unpackResource`](#dspacedo53packetunpackresource)
     - [`dspace.do53.packet.unpack`](#dspacedo53packetunpack)
+      - [Unpacking the `UPDATE` packet](#unpacking-the-update-packet)
 - [LICENSE](#license)
 
 ----
@@ -27,12 +28,26 @@ The purpose of dspace is to replace existing packages handling packets inefficie
 
 Dspace is working in progress to implement [Standard and Proposed Security Standards RFC documents described in Wikipedia](https://en.wikipedia.org/wiki/Domain_Name_System#RFC_documents).
 
+**Packet manipulation**
+
 - [RFC 1035] Domain Implementation and Specification (November 1987): https://datatracker.ietf.org/doc/html/rfc1035
   - Non-experimental and Non-obsolete Resource Records (except for NULL RR which is used as fallback record)
   - Recursive resistance pointer parsing support in labels
 - [RFC 1123] Requirements for Internet Hosts (October 1989) — DOMAIN NAME TRANSLATION: https://datatracker.ietf.org/doc/html/rfc1123#section-6
   - Unused fields in a query or response message is all zero
   - Writing pointer support in labels
+- [RFC 1996] A Mechanism for Prompt Notification of Zone Changes (DNS NOTIFY) (August 1996): https://datatracker.ietf.org/doc/html/rfc1996
+  - Notify operation code support (compatible with 1035 & 1123)
+- [RFC 2136] Dynamic Updates in the Domain Name System (DNS UPDATE) (April 1997): https://datatracker.ietf.org/doc/html/rfc2136
+  - Update operation code support (compatible with 1035 & 1123)
+
+**Server**
+
+None.
+
+**Client**
+
+None.
 
 # API
 
@@ -479,6 +494,28 @@ socket.on('message', message => {
 
   console.log(request)
 })
+```
+
+#### Unpacking the `UPDATE` packet
+
+You may want to unpack the `UPDATE` packet which `IPacket.operationCode` is `EOperationCode.Update`.
+In this case, you can force the type using `IUpdatePacket`.
+
+In RFC 2136, the terms are different.
+However, it's not reasonable to build an unpacking function especially for the zone section since the structure of the packet is same.
+
+The `IPacket` fully covers `IUpdatePacket`.
+
+```ts
+const unpackUpdate = (buffer: Buffer) => {
+  const request = unpack(message)
+
+  if (request.operationCode === EOperationCode.Update) {
+    return request as IUpdatePacket
+  }
+
+  return request
+}
 ```
 
 # LICENSE

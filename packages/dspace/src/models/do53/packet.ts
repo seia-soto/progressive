@@ -599,5 +599,5 @@ export const unpack = (buffer: Buffer): IPacket => {
 		counts,
 		questions,
 		resources,
-	};
+	} as const;
 };
