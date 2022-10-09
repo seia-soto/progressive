@@ -42,6 +42,8 @@ Dspace is working in progress to implement [Standard and Proposed Security Stand
   - Notify operation code support (compatible with 1035 & 1123)
 - [RFC 2136] Dynamic Updates in the Domain Name System (DNS UPDATE) (April 1997): https://datatracker.ietf.org/doc/html/rfc2136
   - Update operation code support (compatible with 1035 & 1123)
+- [RFC 2308] Negative Caching of DNS Queries (DNS NCACHE) (March 1998): https://datatracker.ietf.org/doc/html/rfc2308
+  - Nothing to do
 
 **Server**
 
