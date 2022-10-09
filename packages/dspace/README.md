@@ -36,6 +36,8 @@ Dspace is working in progress to implement [Standard and Proposed Security Stand
 - [RFC 1123] Requirements for Internet Hosts (October 1989) — DOMAIN NAME TRANSLATION: https://datatracker.ietf.org/doc/html/rfc1123#section-6
   - Unused fields in a query or response message is all zero
   - Writing pointer support in labels
+- [RFC 1995] Incremental Zone Transfer in DNS (August 1996): https://datatracker.ietf.org/doc/html/rfc1995
+  - Incremental transfer (IXFR) Resource Record
 - [RFC 1996] A Mechanism for Prompt Notification of Zone Changes (DNS NOTIFY) (August 1996): https://datatracker.ietf.org/doc/html/rfc1996
   - Notify operation code support (compatible with 1035 & 1123)
 - [RFC 2136] Dynamic Updates in the Domain Name System (DNS UPDATE) (April 1997): https://datatracker.ietf.org/doc/html/rfc2136
@@ -110,7 +112,7 @@ unpack(buffer: Buffer): IPacket
 import { EClass, ERecord, EResourceOrder, IPacket, IQuestion, TBuildablePacket, TBuildableQuestion, TCompressionMap, TPart, TResources } from './definition.js';
 export declare const packText: (text: string) => TPart[];
 export declare const packLabel: (text: string, compressionMap: TCompressionMap) => TPart[];
-export declare const packQuestion: (q: TBuildableQuestion, compressionMap: TCompressionMap) => readonly [...TPart[], readonly [ERecord, 16], readonly [EClass, 16]];
+export declare const packQuestion: (q: TBuildableQuestion, compressionMap: TCompressionMap) => readonly [...TPart[], readonly [ERecord | import("./definition.js").EQuestionRecord, 16], readonly [EClass, 16]];
 export declare const packResource: (r: TResources, compressionMap: TCompressionMap) => TPart[];
 export declare const pack: (a: TBuildablePacket) => Buffer;
 export declare const unpackLabel: (buffer: Buffer, offset: number, jump?: number) => readonly [number, string];
@@ -132,7 +134,9 @@ export declare const enum EQueryOrResponse {
 export declare const enum EOperationCode {
     Query = 0,
     InverseQuery = 1,
-    ServerStatus = 2
+    ServerStatus = 2,
+    Notify = 4,
+    Update = 5
 }
 export declare const enum EResponseCode {
     NoError = 0,
@@ -140,7 +144,12 @@ export declare const enum EResponseCode {
     ServerFailure = 2,
     NameError = 3,
     NotImplemented = 4,
-    Refused = 5
+    Refused = 5,
+    YxDomain = 6,
+    YxRrSet = 7,
+    NxRrSet = 8,
+    NotAuthorized = 9,
+    NotZone = 10
 }
 export interface IOptions {
     isAuthoritativeAnswer: TFlag;
@@ -178,14 +187,23 @@ export declare const enum ERecord {
     MX = 15,
     TXT = 16
 }
+export declare const enum EQuestionRecord {
+    IXFR = 251,
+    AXFR = 252,
+    MAILB = 253,
+    MAILA = 254,
+    Any = 255
+}
 export declare const enum EClass {
     Internet = 1,
     Chaos = 3,
-    Hesiod = 4
+    Hesiod = 4,
+    None = 254,
+    Any = 255
 }
 export interface IQuestion {
     name: string;
-    type: ERecord;
+    type: ERecord | EQuestionRecord;
     class: EClass;
 }
 export declare const enum EResourceOrder {
@@ -298,6 +316,11 @@ export declare type TInternetResources = IResourceOfA | IResourceOfWks;
 export interface IPacket extends IHeader {
     questions: IQuestion[];
     resources: TResources[];
+}
+export interface IUpdatePacket extends Omit<IPacket, 'options'> {
+    questions: (Omit<IQuestion, 'type'> & {
+        type: ERecord.SOA;
+    })[];
 }
 export declare type TOptionalResourcesClassField = Partial<{
     class: EClass;

@@ -73,16 +73,25 @@ export const enum ERecord {
   TXT
 }
 
+export const enum EQuestionRecord {
+  IXFR = 251,
+  AXFR,
+  MAILB,
+  MAILA,
+  Any
+}
+
 export const enum EClass {
   Internet = 1,
   Chaos = 3,
   Hesiod,
-  None = 254
+  None = 254,
+  Any
 }
 
 export interface IQuestion {
   name: string,
-  type: ERecord,
+  type: ERecord | EQuestionRecord,
   class: EClass
 }
 
