@@ -1,5 +1,5 @@
 import {octets, pick, range} from 'buffertly';
-import {EClass, EOperationCode, EQueryOrResponse, ERecord, EResourceOrder, EResponseCode, ICounts, IOptions, IPacket, IQuestion, IResource, TBuildablePacket, TBuildableQuestion, TCompressionMap, TFlag, TInternetAddress, TPart, TResources} from './definition.js';
+import {EClass, EOperationCode, EQueryOrResponse, ERecord, EResourceOrder, EResponseCode, ICounts, IOptions, IPacket, IQuestion, IResource, IResourceOfA, IResourceOfCname, IResourceOfHinfo, IResourceOfMx, IResourceOfNs, IResourceOfNsec, IResourceOfPtr, IResourceOfSoa, IResourceOfTxt, IResourceOfWks, TBuildablePacket, TBuildableQuestion, TCompressionMap, TFlag, TInternetAddress, TPart, TResources} from './definition.js';
 
 // Pack
 export const packText = (text: string): TPart[] => text
@@ -49,6 +49,139 @@ export const packQuestion = (q: TBuildableQuestion, compressionMap: TCompression
 	return question;
 };
 
+// eslint-disable-next-line no-unused-vars
+type TPackSpecificResource<IResourceSpecific> = (r: IResourceSpecific, compressionMap: TCompressionMap) => readonly (readonly [number, number])[]
+
+const packResourceOfA: TPackSpecificResource<IResourceOfA> = (r, compressionMap) => {
+	compressionMap.__offset += 32;
+
+	return [
+		[r.data.size, 16],
+		...r.data.source.map(k => [k, 8] as const),
+	] as const;
+};
+
+const packResourceOfCnameLike: TPackSpecificResource<IResourceOfCname | IResourceOfNs | IResourceOfPtr> = (r, compressionMap) => {
+	const label = packLabel(r.data.source, compressionMap);
+
+	return [
+		[r.data.size || label.length, 16],
+		...label,
+	] as const;
+};
+
+const packResourceOfHinfo: TPackSpecificResource<IResourceOfHinfo> = (r, compressionMap) => {
+	const text = packText(
+		r.data.source.cpu + '\0'
+		+ r.data.source.os + '\0',
+	);
+	compressionMap.__offset += text.length * 8;
+
+	return [
+		[r.data.size || text.length, 16],
+		...text,
+	] as const;
+};
+
+const packResourceOfMx: TPackSpecificResource<IResourceOfMx> = (r, compressionMap) => {
+	compressionMap.__offset += 16;
+
+	const label = packLabel(r.data.source.exchange, compressionMap);
+
+	return [
+		[r.data.size || (2 + label.length), 16],
+		[r.data.source.preference, 16],
+		...label,
+	] as const;
+};
+
+const packResourceOfSoa: TPackSpecificResource<IResourceOfSoa> = (r, compressionMap) => {
+	const name = packLabel(r.data.source.name, compressionMap);
+	const representative = packLabel(r.data.source.representative, compressionMap);
+	compressionMap.__offset += 32 * 5;
+
+	return [
+		[r.data.size || (name.length + representative.length + (4 * 5)), 16],
+		...name,
+		...representative,
+		[r.data.source.serial, 32],
+		[r.data.source.refreshIn, 32],
+		[r.data.source.retryIn, 32],
+		[r.data.source.expireIn, 32],
+		[r.data.source.ttl, 32],
+	] as const;
+};
+
+const packResourceOfTxt: TPackSpecificResource<IResourceOfTxt> = (r, compressionMap) => {
+	const text = packText(r.data.source + '\0');
+	compressionMap.__offset += text.length * 8;
+
+	return [
+		[r.data.size || text.length, 16],
+		...text,
+	] as const;
+};
+
+const packResourceOfWks: TPackSpecificResource<IResourceOfWks> = (r, compressionMap) => {
+	const map: TPart[] = [];
+	let pushed: number = 0;
+
+	// 65535 - 32 - 8
+	for (let i = 0; i < 65495; i++) {
+		if (r.data.source.ports.indexOf(i) < 0) {
+			map.push([0, 1]);
+
+			continue;
+		}
+
+		map.push([1, 1]);
+
+		if (++pushed === r.data.source.ports.length) {
+			break;
+		}
+	}
+
+	compressionMap.__offset += 16 + 32 + 8 + pushed;
+
+	return [
+		[4 + 1 + Math.ceil(pushed / 8), 16],
+		...r.data.source.address.map(k => [k, 8] as const),
+		[r.data.source.protocol, 8],
+		...map,
+	] as const;
+};
+
+const packResourceOfNsec: TPackSpecificResource<IResourceOfNsec> = (r, compressionMap) => {
+	const nextName = packLabel(r.data.source.nextName, compressionMap);
+
+	const typeBitMap = r.data.source.typeBitMap.sort((a, b) => a - b);
+	const bytes: number[] = [];
+
+	for (let i = 0; i < typeBitMap.length; i++) {
+		const recordType = typeBitMap[i];
+		const byteIndex = Math.floor(recordType / 8);
+
+		bytes[byteIndex] = (bytes[byteIndex] ?? 0) | 2 ** (7 - (byteIndex % 8));
+	}
+
+	const parts: TPart[] = [];
+
+	for (let i = 0, l = bytes.length; i < l; i++) {
+		if (!(i % 32) /* 256 / 8 */) {
+			parts.push([i / 32, 8]);
+			parts.push([(l - i) % 32, 8]);
+		}
+
+		parts.push([bytes[i], 8]);
+	}
+
+	return [
+		[nextName.length + parts.length, 16],
+		...nextName,
+		...parts,
+	] as const;
+};
+
 export const packResource = (r: TResources, compressionMap: TCompressionMap) => {
 	const parts: TPart[] = [];
 
@@ -63,11 +196,7 @@ export const packResource = (r: TResources, compressionMap: TCompressionMap) => 
 	switch (r.type) {
 		case ERecord.A:
 		{
-			parts.push(
-				[r.data.size, 16],
-				...r.data.source.map(k => [k, 8] as const),
-			);
-			compressionMap.__offset += 32;
+			parts.push(...packResourceOfA(r, compressionMap));
 
 			break;
 		}
@@ -76,107 +205,49 @@ export const packResource = (r: TResources, compressionMap: TCompressionMap) => 
 		case ERecord.NS:
 		case ERecord.PTR:
 		{
-			const label = packLabel(r.data.source, compressionMap);
-
-			parts.push(
-				[r.data.size || label.length, 16],
-				...label,
-			);
+			parts.push(...packResourceOfCnameLike(r, compressionMap));
 
 			break;
 		}
 
 		case ERecord.HINFO:
 		{
-			const text = packText(
-				r.data.source.cpu + '\0'
-				+ r.data.source.os + '\0',
-			);
-
-			parts.push(
-				[r.data.size || text.length, 16],
-				...text,
-			);
-			compressionMap.__offset += text.length * 8;
+			parts.push(...packResourceOfHinfo(r, compressionMap));
 
 			break;
 		}
 
 		case ERecord.MX:
 		{
-			compressionMap.__offset += 16;
-
-			const label = packLabel(r.data.source.exchange, compressionMap);
-
-			parts.push(
-				[r.data.size || (2 + label.length), 16],
-				[r.data.source.preference, 16],
-				...label,
-			);
+			parts.push(...packResourceOfMx(r, compressionMap));
 
 			break;
 		}
 
 		case ERecord.SOA:
 		{
-			const name = packLabel(r.data.source.name, compressionMap);
-			const representative = packLabel(r.data.source.representative, compressionMap);
-
-			parts.push(
-				[r.data.size || (name.length + representative.length + (4 * 5)), 16],
-				...name,
-				...representative,
-				[r.data.source.serial, 32],
-				[r.data.source.refreshIn, 32],
-				[r.data.source.retryIn, 32],
-				[r.data.source.expireIn, 32],
-				[r.data.source.ttl, 32],
-			);
-			compressionMap.__offset += 32 * 5;
+			parts.push(...packResourceOfSoa(r, compressionMap));
 
 			break;
 		}
 
 		case ERecord.TXT:
 		{
-			const text = packText(r.data.source + '\0');
-
-			parts.push(
-				[r.data.size || text.length, 16],
-				...text,
-			);
-			compressionMap.__offset += text.length * 8;
+			parts.push(...packResourceOfTxt(r, compressionMap));
 
 			break;
 		}
 
 		case ERecord.WKS:
 		{
-			const map: TPart[] = [];
-			let pushed: number = 0;
+			parts.push(...packResourceOfWks(r, compressionMap));
 
-			// 65535 - 32 - 8
-			for (let i = 0; i < 65495; i++) {
-				if (r.data.source.ports.indexOf(i) < 0) {
-					map.push([0, 1]);
+			break;
+		}
 
-					continue;
-				}
-
-				map.push([1, 1]);
-
-				if (++pushed === r.data.source.ports.length) {
-					break;
-				}
-			}
-
-			parts.push(
-				[4 + 1 + Math.ceil(pushed / 8), 16],
-				...r.data.source.address.map(k => [k, 8] as const),
-				[r.data.source.protocol, 8],
-				...map,
-			);
-			compressionMap.__offset += 16 + 32 + 8 + pushed;
+		case ERecord.NSEC:
+		{
+			parts.push(...packResourceOfNsec(r, compressionMap));
 
 			break;
 		}
@@ -515,6 +586,51 @@ export const unpackResource = (buffer: Buffer, offset: number, order: EResourceO
 							address,
 							protocol,
 							ports,
+						},
+					},
+				},
+			] as const;
+		}
+
+		case ERecord.NSEC:
+		{
+			const [n, nextName] = unpackLabel(buffer, offset);
+			offset = n;
+			const typeBitMap: number[] = [];
+
+			let lastIterate = -1;
+
+			for (; ;) {
+				const iterate = range(buffer, offset, 8);
+
+				if (lastIterate + 1 !== iterate) {
+					break;
+				}
+
+				const bias = iterate * 256;
+				offset += 8;
+				const width = range(buffer, offset, 8);
+				offset += 8;
+
+				for (let i = 0; i < width * 8; i++) {
+					if (pick(buffer, offset++)) {
+						typeBitMap.push(bias + i);
+					}
+				}
+
+				lastIterate = iterate;
+			}
+
+			return [
+				offset,
+				{
+					...base,
+					type: ERecord.NSEC,
+					data: {
+						size,
+						source: {
+							nextName,
+							typeBitMap,
 						},
 					},
 				},

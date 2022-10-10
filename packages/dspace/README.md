@@ -44,6 +44,8 @@ Dspace is working in progress to implement [Standard and Proposed Security Stand
   - Update operation code support (compatible with 1035 & 1123)
 - [RFC 2308] Negative Caching of DNS Queries (DNS NCACHE) (March 1998): https://datatracker.ietf.org/doc/html/rfc2308
   - Nothing to do
+- **EXPERIMENTAL** [RFC 4034] DNSSEC Resource Records (March 2005): https://datatracker.ietf.org/doc/html/rfc4034
+  - NSEC resource record support (only)
 
 **Server**
 
@@ -187,7 +189,10 @@ export declare const enum ERecord {
     HINFO = 13,
     MINFO = 14,
     MX = 15,
-    TXT = 16
+    TXT = 16,
+    RRSIG = 46,
+    NSEC = 47,
+    DNSKEY = 48
 }
 export declare const enum EQuestionRecord {
     IXFR = 251,
@@ -313,7 +318,59 @@ export interface IResourceOfNull extends IResource {
         source: null;
     };
 }
-export declare type TResources = IResourceOfCname | IResourceOfHinfo | IResourceOfMx | IResourceOfNs | IResourceOfPtr | IResourceOfSoa | IResourceOfTxt | IResourceOfA | IResourceOfWks | IResourceOfNull;
+export declare const enum EKeyAlgorithm {
+    RSAMD5 = 1,
+    DH = 2,
+    DSA = 3,
+    ECC = 4,
+    RSASHA1 = 5,
+    INDIRECT = 252,
+    PRIVATEDNS = 253,
+    PRIVATEOID = 254
+}
+export interface IResourceOfDnskey extends IResource {
+    type: ERecord.DNSKEY;
+    data: {
+        size: number;
+        source: {
+            flags: {
+                isZoneKey: TFlag;
+                isSecureEntryPoint: TFlag;
+            };
+            protoco: 3;
+            algorithm: EKeyAlgorithm;
+            publicKey: string;
+        };
+    };
+}
+export interface IResourceOfRrsig extends IResource {
+    type: ERecord.RRSIG;
+    data: {
+        size: number;
+        source: {
+            typeCovered: ERecord;
+            algorithm: EKeyAlgorithm;
+            labels: number;
+            originalTtl: number;
+            signatureExpiration: number;
+            signatureInception: number;
+            keyTag: number;
+            signerName: string;
+            signature: string;
+        };
+    };
+}
+export interface IResourceOfNsec extends IResource {
+    type: ERecord.NSEC;
+    data: {
+        size: number;
+        source: {
+            nextName: string;
+            typeBitMap: ERecord[];
+        };
+    };
+}
+export declare type TResources = IResourceOfCname | IResourceOfHinfo | IResourceOfMx | IResourceOfNs | IResourceOfPtr | IResourceOfSoa | IResourceOfTxt | IResourceOfA | IResourceOfWks | IResourceOfNull | IResourceOfNsec;
 export declare type TInternetResources = IResourceOfA | IResourceOfWks;
 export interface IPacket extends IHeader {
     questions: IQuestion[];

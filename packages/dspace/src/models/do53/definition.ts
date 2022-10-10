@@ -70,7 +70,10 @@ export const enum ERecord {
   HINFO,
   MINFO,
   MX,
-  TXT
+  TXT,
+  RRSIG = 46,
+  NSEC,
+  DNSKEY
 }
 
 export const enum EQuestionRecord {
@@ -217,6 +220,63 @@ export interface IResourceOfNull extends IResource {
   }
 }
 
+// DNSKEY Resource Record: https://datatracker.ietf.org/doc/html/rfc4034#section-2
+export const enum EKeyAlgorithm {
+  RSAMD5 = 1,
+  DH,
+  DSA,
+  ECC,
+  RSASHA1,
+  INDIRECT = 252,
+  PRIVATEDNS,
+  PRIVATEOID
+}
+
+export interface IResourceOfDnskey extends IResource {
+  type: ERecord.DNSKEY,
+  data: {
+    size: number,
+    source: {
+      flags: {
+        isZoneKey: TFlag, // 7th bit
+        isSecureEntryPoint: TFlag // 15th bit
+      },
+      protoco: 3,
+      algorithm: EKeyAlgorithm,
+      publicKey: string
+    }
+  }
+}
+
+export interface IResourceOfRrsig extends IResource {
+  type: ERecord.RRSIG,
+  data: {
+    size: number,
+    source: {
+      typeCovered: ERecord,
+      algorithm: EKeyAlgorithm,
+      labels: number,
+      originalTtl: number,
+      signatureExpiration: number,
+      signatureInception: number,
+      keyTag: number,
+      signerName: string,
+      signature: string
+    }
+  }
+}
+
+export interface IResourceOfNsec extends IResource {
+  type: ERecord.NSEC,
+  data: {
+    size: number,
+    source: {
+      nextName: string,
+      typeBitMap: ERecord[]
+    }
+  }
+}
+
 export type TResources = IResourceOfCname
   | IResourceOfHinfo
   | IResourceOfMx
@@ -227,6 +287,7 @@ export type TResources = IResourceOfCname
   | IResourceOfA
   | IResourceOfWks
   | IResourceOfNull
+  | IResourceOfNsec
 
 export type TInternetResources = IResourceOfA
   | IResourceOfWks
