@@ -71,6 +71,7 @@ export const enum ERecord {
   MINFO,
   MX,
   TXT,
+  DS = 43,
   RRSIG = 46,
   NSEC,
   DNSKEY
@@ -241,7 +242,7 @@ export interface IResourceOfDnskey extends IResource {
         isZoneKey: TFlag, // 7th bit
         isSecureEntryPoint: TFlag // 15th bit
       },
-      protoco: 3,
+      protocol: 3,
       algorithm: EKeyAlgorithm,
       publicKey: string
     }
@@ -277,6 +278,24 @@ export interface IResourceOfNsec extends IResource {
   }
 }
 
+// DS Resource Record: https://datatracker.ietf.org/doc/html/rfc4034#appendix-A.2
+export const enum EDigestType {
+  SHA1 = 1
+}
+
+export interface IResourceOfDs extends IResource {
+  type: ERecord.DS,
+  data: {
+    size: number,
+    source: {
+      keyTag: number,
+      algorithm: EKeyAlgorithm,
+      digestType: EDigestType,
+      digest: string
+    }
+  }
+}
+
 export type TResources = IResourceOfCname
   | IResourceOfHinfo
   | IResourceOfMx
@@ -287,7 +306,10 @@ export type TResources = IResourceOfCname
   | IResourceOfA
   | IResourceOfWks
   | IResourceOfNull
+  | IResourceOfDnskey
+  | IResourceOfRrsig
   | IResourceOfNsec
+  | IResourceOfDs
 
 export type TInternetResources = IResourceOfA
   | IResourceOfWks

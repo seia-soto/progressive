@@ -1,5 +1,5 @@
 import {octets, pick, range} from 'buffertly';
-import {EClass, EOperationCode, EQueryOrResponse, ERecord, EResourceOrder, EResponseCode, ICounts, IOptions, IPacket, IQuestion, IResource, IResourceOfA, IResourceOfCname, IResourceOfHinfo, IResourceOfMx, IResourceOfNs, IResourceOfNsec, IResourceOfPtr, IResourceOfSoa, IResourceOfTxt, IResourceOfWks, TBuildablePacket, TBuildableQuestion, TCompressionMap, TFlag, TInternetAddress, TPart, TResources} from './definition.js';
+import {EClass, EOperationCode, EQueryOrResponse, ERecord, EResourceOrder, EResponseCode, ICounts, IOptions, IPacket, IQuestion, IResource, IResourceOfA, IResourceOfCname, IResourceOfDnskey, IResourceOfDs, IResourceOfHinfo, IResourceOfMx, IResourceOfNs, IResourceOfNsec, IResourceOfPtr, IResourceOfRrsig, IResourceOfSoa, IResourceOfTxt, IResourceOfWks, TBuildablePacket, TBuildableQuestion, TCompressionMap, TFlag, TInternetAddress, TPart, TResources} from './definition.js';
 
 // Pack
 export const packText = (text: string): TPart[] => text
@@ -151,6 +151,22 @@ const packResourceOfWks: TPackSpecificResource<IResourceOfWks> = (r, compression
 	] as const;
 };
 
+const packResourceOfDnskey: TPackSpecificResource<IResourceOfDnskey> = (r, compressionMap) => {
+	const publicKey = packText(r.data.source.publicKey);
+	compressionMap.__offset += 32 + (publicKey.length * 8);
+
+	return [
+		[4 + publicKey.length, 16],
+		[0, 7],
+		[r.data.source.flags.isZoneKey, 1],
+		[0, 7],
+		[r.data.source.flags.isSecureEntryPoint, 1],
+		[r.data.source.protocol, 8],
+		[r.data.source.algorithm, 8],
+		...publicKey,
+	] as const;
+};
+
 const packResourceOfNsec: TPackSpecificResource<IResourceOfNsec> = (r, compressionMap) => {
 	const nextName = packLabel(r.data.source.nextName, compressionMap);
 
@@ -175,14 +191,51 @@ const packResourceOfNsec: TPackSpecificResource<IResourceOfNsec> = (r, compressi
 		parts.push([bytes[i], 8]);
 	}
 
+	const size = nextName.length + parts.length;
+	compressionMap.__offset += size * 8;
+
 	return [
-		[nextName.length + parts.length, 16],
+		[size, 16],
 		...nextName,
 		...parts,
 	] as const;
 };
 
-export const packResource = (r: TResources, compressionMap: TCompressionMap) => {
+const packResourceOfRrsig: TPackSpecificResource<IResourceOfRrsig> = (r, compressionMap) => {
+	const emptyMap = {__offset: compressionMap.__offset};
+	const signerName = packLabel(r.data.source.signerName, emptyMap);
+	const signature = packText(r.data.source.signature);
+	const size = (signerName.length + signature.length) + 18;
+	compressionMap.__offset = size * 8;
+
+	return [
+		[size / 8, 16],
+		[r.data.source.typeCovered, 16],
+		[r.data.source.algorithm, 8],
+		[r.data.source.labels, 8],
+		[r.data.source.originalTtl, 32],
+		[r.data.source.signatureExpiration, 32],
+		[r.data.source.signatureInception, 32],
+		[r.data.source.keyTag, 16],
+		...signerName,
+		...signature,
+	] as const;
+};
+
+const packResourceOfDs: TPackSpecificResource<IResourceOfDs> = (r, compressionMap) => {
+	const digest = packText(r.data.source.digest);
+	const size = digest.length + 4;
+	compressionMap.__offset += size * 8;
+
+	return [
+		[size, 16],
+		[r.data.source.keyTag, 16],
+		[r.data.source.algorithm, 8],
+		...digest,
+	] as const;
+};
+
+export const packResource = (r: TResources, compressionMap: TCompressionMap): TPart[] => {
 	const parts: TPart[] = [];
 
 	parts.push(
@@ -196,60 +249,59 @@ export const packResource = (r: TResources, compressionMap: TCompressionMap) => 
 	switch (r.type) {
 		case ERecord.A:
 		{
-			parts.push(...packResourceOfA(r, compressionMap));
-
-			break;
+			return [...parts, ...packResourceOfA(r, compressionMap)];
 		}
 
 		case ERecord.CNAME:
 		case ERecord.NS:
 		case ERecord.PTR:
 		{
-			parts.push(...packResourceOfCnameLike(r, compressionMap));
-
-			break;
+			return [...parts, ...packResourceOfCnameLike(r, compressionMap)];
 		}
 
 		case ERecord.HINFO:
 		{
-			parts.push(...packResourceOfHinfo(r, compressionMap));
-
-			break;
+			return [...parts, ...packResourceOfHinfo(r, compressionMap)];
 		}
 
 		case ERecord.MX:
 		{
-			parts.push(...packResourceOfMx(r, compressionMap));
-
-			break;
+			return [...parts, ...packResourceOfMx(r, compressionMap)];
 		}
 
 		case ERecord.SOA:
 		{
-			parts.push(...packResourceOfSoa(r, compressionMap));
-
-			break;
+			return [...parts, ...packResourceOfSoa(r, compressionMap)];
 		}
 
 		case ERecord.TXT:
 		{
-			parts.push(...packResourceOfTxt(r, compressionMap));
-
-			break;
+			return [...parts, ...packResourceOfTxt(r, compressionMap)];
 		}
 
 		case ERecord.WKS:
 		{
-			parts.push(...packResourceOfWks(r, compressionMap));
+			return [...parts, ...packResourceOfWks(r, compressionMap)];
+		}
 
-			break;
+		case ERecord.DNSKEY:
+		{
+			return [...parts, ...packResourceOfDnskey(r, compressionMap)];
+		}
+
+		case ERecord.RRSIG:
+		{
+			return [...parts, ...packResourceOfRrsig(r, compressionMap)];
 		}
 
 		case ERecord.NSEC:
 		{
-			parts.push(...packResourceOfNsec(r, compressionMap));
+			return [...parts, ...packResourceOfNsec(r, compressionMap)];
+		}
 
-			break;
+		case ERecord.DS:
+		{
+			return [...parts, ...packResourceOfDs(r, compressionMap)];
 		}
 	}
 
@@ -572,6 +624,42 @@ const unpackResourceOfWks: TUnpackSpecificResource<IResourceOfWks> = (buffer, of
 	] as const;
 };
 
+const unpackResourceOfDnskey: TUnpackSpecificResource<IResourceOfDnskey> = (buffer, offset, base) => {
+	const isZoneKey = pick(buffer, offset + 7) as TFlag;
+	const isSecureEntryPoint = pick(buffer, offset + 15) as TFlag;
+	offset += 16;
+	const protocol = range(buffer, offset, 8);
+	offset += 8;
+
+	if (protocol !== 3) {
+		throw new Error('The protocol field of DNSKEY resource record should be 3!');
+	}
+
+	const algorithm = range(buffer, offset, 8);
+	offset += 8;
+	const [n, publicKey] = unpackText(buffer, offset);
+
+	return [
+		n,
+		{
+			...base,
+			type: ERecord.DNSKEY,
+			data: {
+				size: base.data.size,
+				source: {
+					flags: {
+						isZoneKey,
+						isSecureEntryPoint,
+					},
+					protocol,
+					algorithm,
+					publicKey,
+				},
+			},
+		},
+	] as const;
+};
+
 const unpackResourceOfNsec: TUnpackSpecificResource<IResourceOfNsec> = (buffer, offset, base) => {
 	const [n, nextName] = unpackLabel(buffer, offset);
 	offset = n;
@@ -610,6 +698,74 @@ const unpackResourceOfNsec: TUnpackSpecificResource<IResourceOfNsec> = (buffer, 
 				source: {
 					nextName,
 					typeBitMap,
+				},
+			},
+		},
+	] as const;
+};
+
+const unpackResourceOfRrsig: TUnpackSpecificResource<IResourceOfRrsig> = (buffer, offset, base) => {
+	const typeCovered = range(buffer, offset, 16);
+	offset += 16;
+	const algorithm = range(buffer, offset, 8);
+	offset += 8;
+	const labels = range(buffer, offset, 8);
+	offset += 8;
+	const originalTtl = range(buffer, offset, 32);
+	offset += 32;
+	const signatureExpiration = range(buffer, offset, 32);
+	offset += 32;
+	const signatureInception = range(buffer, offset, 32);
+	offset += 32;
+	const keyTag = range(buffer, offset, 16);
+	offset += 16;
+	const [n, signerName] = unpackLabel(buffer, offset);
+	const [n2, signature] = unpackText(buffer, n);
+
+	return [
+		n2,
+		{
+			...base,
+			type: ERecord.RRSIG,
+			data: {
+				size: base.data.size,
+				source: {
+					typeCovered,
+					algorithm,
+					labels,
+					originalTtl,
+					signatureExpiration,
+					signatureInception,
+					keyTag,
+					signerName,
+					signature,
+				},
+			},
+		},
+	] as const;
+};
+
+const unpackResourceOfDs: TUnpackSpecificResource<IResourceOfDs> = (buffer, offset, base) => {
+	const keyTag = range(buffer, offset, 16);
+	offset += 16;
+	const algorithm = range(buffer, offset, 8);
+	offset += 8;
+	const digestType = range(buffer, offset, 8);
+	offset += 8;
+	const [n, digest] = unpackText(buffer, offset);
+
+	return [
+		n,
+		{
+			...base,
+			type: ERecord.DS,
+			data: {
+				size: base.data.size,
+				source: {
+					keyTag,
+					algorithm,
+					digestType,
+					digest,
 				},
 			},
 		},
@@ -667,9 +823,24 @@ export const unpackResource = (buffer: Buffer, offset: number, order: EResourceO
 			return unpackResourceOfWks(buffer, offset, base);
 		}
 
+		case ERecord.DNSKEY:
+		{
+			return unpackResourceOfDnskey(buffer, offset, base);
+		}
+
+		case ERecord.RRSIG:
+		{
+			return unpackResourceOfRrsig(buffer, offset, base);
+		}
+
 		case ERecord.NSEC:
 		{
 			return unpackResourceOfNsec(buffer, offset, base);
+		}
+
+		case ERecord.DS:
+		{
+			return unpackResourceOfDs(buffer, offset, base);
 		}
 	}
 
