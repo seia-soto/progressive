@@ -402,6 +402,220 @@ export const unpackQuestion = (buffer: Buffer, offset: number): readonly [number
 	] as const;
 };
 
+// eslint-disable-next-line no-unused-vars
+type TUnpackSpecificResource<IResourceSpecific> = (buffer: Buffer, offset: number, base: IResource) => readonly [number, IResourceSpecific]
+
+const unpackResourceOfA: TUnpackSpecificResource<IResourceOfA> = (buffer, offset, base) => {
+	const source: TInternetAddress = [
+		range(buffer, offset, 8),
+		range(buffer, offset + 8, 8),
+		range(buffer, offset + 16, 8),
+		range(buffer, offset + 32, 8),
+	];
+
+	return [
+		offset + 32,
+		{
+			...base,
+			type: ERecord.A,
+			data: {
+				size: 4,
+				source,
+			},
+		},
+	] as const;
+};
+
+const unpackResourceOfCnameLike: TUnpackSpecificResource<IResourceOfCname | IResourceOfNs | IResourceOfPtr> = (buffer, offset, base) => {
+	const [n, name] = unpackLabel(buffer, offset);
+
+	return [
+		n,
+		{
+			...base,
+			type: ERecord.CNAME | ERecord.NS | ERecord.PTR,
+			data: {
+				size: base.data.size,
+				source: name,
+			},
+		},
+	] as const;
+};
+
+const unpackResourceOfHinfo: TUnpackSpecificResource<IResourceOfHinfo> = (buffer, offset, base) => {
+	const [n, cpu] = unpackText(buffer, offset);
+	const [n2, os] = unpackText(buffer, n);
+
+	return [
+		n2,
+		{
+			...base,
+			type: ERecord.HINFO,
+			data: {
+				size: base.data.size,
+				source: {cpu, os},
+			},
+		},
+	] as const;
+};
+
+const unpackResourceOfMx: TUnpackSpecificResource<IResourceOfMx> = (buffer, offset, base) => {
+	const preference = range(buffer, offset, 16);
+	offset += 16;
+	const [n, exchange] = unpackLabel(buffer, offset);
+
+	return [
+		n,
+		{
+			...base,
+			type: ERecord.MX,
+			data: {
+				size: base.data.size,
+				source: {
+					preference,
+					exchange,
+				},
+			},
+		},
+	] as const;
+};
+
+const unpackResourceOfSoa: TUnpackSpecificResource<IResourceOfSoa> = (buffer, offset, base) => {
+	const [n, name] = unpackLabel(buffer, offset);
+	const [n2, representative] = unpackLabel(buffer, n);
+	const serial = range(buffer, n2, 32);
+	offset = n2 + 32;
+	const refreshIn = range(buffer, offset, 32);
+	offset += 32;
+	const retryIn = range(buffer, offset, 32);
+	offset += 32;
+	const expireIn = range(buffer, offset, 32);
+	offset += 32;
+	const ttl = range(buffer, offset, 32);
+
+	return [
+		offset + 32,
+		{
+			...base,
+			type: ERecord.SOA,
+			data: {
+				size: base.data.size,
+				source: {
+					name,
+					representative,
+					serial,
+					refreshIn,
+					retryIn,
+					expireIn,
+					ttl,
+				},
+			},
+		},
+	] as const;
+};
+
+const unpackResourceOfTxt: TUnpackSpecificResource<IResourceOfTxt> = (buffer, offset, base) => {
+	const [n, text] = unpackText(buffer, offset);
+	offset = n;
+
+	return [
+		n,
+		{
+			...base,
+			type: ERecord.TXT,
+			data: {
+				size: base.data.size,
+				source: text,
+			},
+		},
+	] as const;
+};
+
+const unpackResourceOfWks: TUnpackSpecificResource<IResourceOfWks> = (buffer, offset, base) => {
+	const address: TInternetAddress = [
+		range(buffer, offset, 8),
+		range(buffer, offset + 8, 8),
+		range(buffer, offset + 16, 8),
+		range(buffer, offset + 32, 8),
+	];
+	offset += 32;
+	const protocol = range(buffer, offset, 8);
+	offset += 8;
+
+	const ports: number[] = [];
+
+	for (let i = 0; i < 65536; i++) {
+		try {
+			if (pick(buffer, offset++)) {
+				ports.push(i);
+			}
+			// eslint-disable-next-line no-unused-vars
+		} catch (error) {
+			break;
+		}
+	}
+
+	return [
+		offset,
+		{
+			...base,
+			type: ERecord.WKS,
+			data: {
+				size: base.data.size,
+				source: {
+					address,
+					protocol,
+					ports,
+				},
+			},
+		},
+	] as const;
+};
+
+const unpackResourceOfNsec: TUnpackSpecificResource<IResourceOfNsec> = (buffer, offset, base) => {
+	const [n, nextName] = unpackLabel(buffer, offset);
+	offset = n;
+	const typeBitMap: number[] = [];
+
+	let lastIterate = -1;
+
+	for (; ;) {
+		const iterate = range(buffer, offset, 8);
+
+		if (lastIterate + 1 !== iterate) {
+			break;
+		}
+
+		const bias = iterate * 256;
+		offset += 8;
+		const width = range(buffer, offset, 8);
+		offset += 8;
+
+		for (let i = 0; i < width * 8; i++) {
+			if (pick(buffer, offset++)) {
+				typeBitMap.push(bias + i);
+			}
+		}
+
+		lastIterate = iterate;
+	}
+
+	return [
+		offset,
+		{
+			...base,
+			type: ERecord.NSEC,
+			data: {
+				size: base.data.size,
+				source: {
+					nextName,
+					typeBitMap,
+				},
+			},
+		},
+	] as const;
+};
+
 export const unpackResource = (buffer: Buffer, offset: number, order: EResourceOrder = EResourceOrder.Answer): readonly [number, TResources] => {
 	const [n, name] = unpackLabel(buffer, offset);
 	const type: ERecord = range(buffer, n, 16);
@@ -413,228 +627,49 @@ export const unpackResource = (buffer: Buffer, offset: number, order: EResourceO
 	const size = range(buffer, offset, 16);
 	offset += 16;
 
-	const base: IResource = {order, name, type, class: kClass, ttl, data: {size: 0, source: null}};
+	const base: IResource = {order, name, type, class: kClass, ttl, data: {size, source: null}};
 
 	switch (type) {
 		case ERecord.A:
 		{
-			const source: TInternetAddress = [
-				range(buffer, offset, 8),
-				range(buffer, offset + 8, 8),
-				range(buffer, offset + 16, 8),
-				range(buffer, offset + 32, 8),
-			];
-
-			return [
-				offset + 32,
-				{
-					...base,
-					type: ERecord.A,
-					data: {
-						size: 4,
-						source,
-					},
-				},
-			] as const;
+			return unpackResourceOfA(buffer, offset, base);
 		}
 
 		case ERecord.CNAME:
 		case ERecord.NS:
 		case ERecord.PTR:
 		{
-			const [n, name] = unpackLabel(buffer, offset);
-
-			return [
-				n,
-				{
-					...base,
-					type: ERecord.CNAME | ERecord.NS | ERecord.PTR,
-					data: {
-						size,
-						source: name,
-					},
-				},
-			] as const;
+			return unpackResourceOfCnameLike(buffer, offset, base);
 		}
 
 		case ERecord.HINFO:
 		{
-			const [n, cpu] = unpackText(buffer, offset);
-			const [n2, os] = unpackText(buffer, n);
-
-			return [
-				n2,
-				{
-					...base,
-					type: ERecord.HINFO,
-					data: {
-						size,
-						source: {cpu, os},
-					},
-				},
-			] as const;
+			return unpackResourceOfHinfo(buffer, offset, base);
 		}
 
 		case ERecord.MX:
 		{
-			const preference = range(buffer, offset, 16);
-			offset += 16;
-			const [n, exchange] = unpackLabel(buffer, offset);
-
-			return [
-				n,
-				{
-					...base,
-					type: ERecord.MX,
-					data: {
-						size,
-						source: {
-							preference,
-							exchange,
-						},
-					},
-				},
-			] as const;
+			return unpackResourceOfMx(buffer, offset, base);
 		}
 
 		case ERecord.SOA:
 		{
-			const [n, name] = unpackLabel(buffer, offset);
-			const [n2, representative] = unpackLabel(buffer, n);
-			const serial = range(buffer, n2, 32);
-			offset = n2 + 32;
-			const refreshIn = range(buffer, offset, 32);
-			offset += 32;
-			const retryIn = range(buffer, offset, 32);
-			offset += 32;
-			const expireIn = range(buffer, offset, 32);
-			offset += 32;
-			const ttl = range(buffer, offset, 32);
-
-			return [
-				offset + 32,
-				{
-					...base,
-					type: ERecord.SOA,
-					data: {
-						size,
-						source: {
-							name,
-							representative,
-							serial,
-							refreshIn,
-							retryIn,
-							expireIn,
-							ttl,
-						},
-					},
-				},
-			] as const;
+			return unpackResourceOfSoa(buffer, offset, base);
 		}
 
 		case ERecord.TXT:
 		{
-			const [n, text] = unpackText(buffer, offset);
-			offset = n;
-
-			return [
-				n,
-				{
-					...base,
-					type: ERecord.TXT,
-					data: {
-						size,
-						source: text,
-					},
-				},
-			] as const;
+			return unpackResourceOfTxt(buffer, offset, base);
 		}
 
 		case ERecord.WKS:
 		{
-			const address: TInternetAddress = [
-				range(buffer, offset, 8),
-				range(buffer, offset + 8, 8),
-				range(buffer, offset + 16, 8),
-				range(buffer, offset + 32, 8),
-			];
-			offset += 32;
-			const protocol = range(buffer, offset, 8);
-			offset += 8;
-
-			const ports: number[] = [];
-
-			for (let i = 0; i < 65536; i++) {
-				try {
-					if (pick(buffer, offset++)) {
-						ports.push(i);
-					}
-					// eslint-disable-next-line no-unused-vars
-				} catch (error) {
-					break;
-				}
-			}
-
-			return [
-				offset,
-				{
-					...base,
-					type: ERecord.WKS,
-					data: {
-						size,
-						source: {
-							address,
-							protocol,
-							ports,
-						},
-					},
-				},
-			] as const;
+			return unpackResourceOfWks(buffer, offset, base);
 		}
 
 		case ERecord.NSEC:
 		{
-			const [n, nextName] = unpackLabel(buffer, offset);
-			offset = n;
-			const typeBitMap: number[] = [];
-
-			let lastIterate = -1;
-
-			for (; ;) {
-				const iterate = range(buffer, offset, 8);
-
-				if (lastIterate + 1 !== iterate) {
-					break;
-				}
-
-				const bias = iterate * 256;
-				offset += 8;
-				const width = range(buffer, offset, 8);
-				offset += 8;
-
-				for (let i = 0; i < width * 8; i++) {
-					if (pick(buffer, offset++)) {
-						typeBitMap.push(bias + i);
-					}
-				}
-
-				lastIterate = iterate;
-			}
-
-			return [
-				offset,
-				{
-					...base,
-					type: ERecord.NSEC,
-					data: {
-						size,
-						source: {
-							nextName,
-							typeBitMap,
-						},
-					},
-				},
-			] as const;
+			return unpackResourceOfNsec(buffer, offset, base);
 		}
 	}
 
