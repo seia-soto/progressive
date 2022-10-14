@@ -190,6 +190,7 @@ export declare const enum ERecord {
     MINFO = 14,
     MX = 15,
     TXT = 16,
+    DS = 43,
     RRSIG = 46,
     NSEC = 47,
     DNSKEY = 48
@@ -337,9 +338,9 @@ export interface IResourceOfDnskey extends IResource {
                 isZoneKey: TFlag;
                 isSecureEntryPoint: TFlag;
             };
-            protoco: 3;
+            protocol: 3;
             algorithm: EKeyAlgorithm;
-            publicKey: string;
+            publicKey: number[];
         };
     };
 }
@@ -356,7 +357,7 @@ export interface IResourceOfRrsig extends IResource {
             signatureInception: number;
             keyTag: number;
             signerName: string;
-            signature: string;
+            signature: number[];
         };
     };
 }
@@ -370,8 +371,22 @@ export interface IResourceOfNsec extends IResource {
         };
     };
 }
-export declare type TResources = IResourceOfCname | IResourceOfHinfo | IResourceOfMx | IResourceOfNs | IResourceOfPtr | IResourceOfSoa | IResourceOfTxt | IResourceOfA | IResourceOfWks | IResourceOfNull | IResourceOfNsec;
-export declare type TInternetResources = IResourceOfA | IResourceOfWks;
+export declare const enum EDigestType {
+    SHA1 = 1
+}
+export interface IResourceOfDs extends IResource {
+    type: ERecord.DS;
+    data: {
+        size: number;
+        source: {
+            keyTag: number;
+            algorithm: EKeyAlgorithm;
+            digestType: EDigestType;
+            digest: number[];
+        };
+    };
+}
+export declare type TResources = IResourceOfCname | IResourceOfHinfo | IResourceOfMx | IResourceOfNs | IResourceOfPtr | IResourceOfSoa | IResourceOfTxt | IResourceOfA | IResourceOfWks | IResourceOfNull | IResourceOfDnskey | IResourceOfRrsig | IResourceOfNsec | IResourceOfDs;
 export interface IPacket extends IHeader {
     questions: IQuestion[];
     resources: TResources[];
