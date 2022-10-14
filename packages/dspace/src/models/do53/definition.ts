@@ -262,7 +262,7 @@ export interface IResourceOfRrsig extends IResource {
       signatureInception: number,
       keyTag: number,
       signerName: string,
-      signature: string
+      signature: number[]
     }
   }
 }
@@ -291,7 +291,7 @@ export interface IResourceOfDs extends IResource {
       keyTag: number,
       algorithm: EKeyAlgorithm,
       digestType: EDigestType,
-      digest: string
+      digest: number[]
     }
   }
 }
@@ -310,9 +310,6 @@ export type TResources = IResourceOfCname
   | IResourceOfRrsig
   | IResourceOfNsec
   | IResourceOfDs
-
-export type TInternetResources = IResourceOfA
-  | IResourceOfWks
 
 // Packet (Composed)
 export interface IPacket extends IHeader {

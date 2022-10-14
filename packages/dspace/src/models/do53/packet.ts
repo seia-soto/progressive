@@ -201,9 +201,8 @@ const packResourceOfNsec: TPackSpecificResource<IResourceOfNsec> = (r, compressi
 };
 
 const packResourceOfRrsig: TPackSpecificResource<IResourceOfRrsig> = (r, compressionMap) => {
-	const emptyMap = {__offset: compressionMap.__offset};
-	const signerName = packLabel(r.data.source.signerName, emptyMap);
-	const signature = packText(r.data.source.signature);
+	const signerName = packLabel(r.data.source.signerName, {__offset: compressionMap.__offset});
+	const signature = r.data.source.signature.map(k => [k, 8] as const);
 	const size = (signerName.length + signature.length) + 18;
 	compressionMap.__offset = size * 8;
 
@@ -222,8 +221,8 @@ const packResourceOfRrsig: TPackSpecificResource<IResourceOfRrsig> = (r, compres
 };
 
 const packResourceOfDs: TPackSpecificResource<IResourceOfDs> = (r, compressionMap) => {
-	const digest = packText(r.data.source.digest);
-	const size = digest.length + 4;
+	const digest = r.data.source.digest.map(k => [k, 8] as const);
+	const size = digest.length + 3;
 	compressionMap.__offset += size * 8;
 
 	return [
@@ -725,10 +724,16 @@ const unpackResourceOfRrsig: TUnpackSpecificResource<IResourceOfRrsig> = (buffer
 	const keyTag = range(buffer, offset, 16);
 	offset += 16;
 	const [n, signerName] = unpackLabel(buffer, offset);
-	const [n2, signature] = unpackText(buffer, n);
+	offset = n;
+	const signature: number[] = [];
+
+	for (let i = 17; i < base.data.size - 1; i++) {
+		signature.push(range(buffer, offset, 8));
+		offset += 8;
+	}
 
 	return [
-		n2,
+		offset,
 		{
 			...base,
 			type: ERecord.RRSIG,
@@ -757,10 +762,15 @@ const unpackResourceOfDs: TUnpackSpecificResource<IResourceOfDs> = (buffer, offs
 	offset += 8;
 	const digestType = range(buffer, offset, 8);
 	offset += 8;
-	const [n, digest] = unpackText(buffer, offset);
+	const digest: number[] = [];
+
+	for (let i = 3; i < base.data.size - 1; i++) {
+		digest.push(range(buffer, offset, 8));
+		offset += 8;
+	}
 
 	return [
-		n,
+		offset,
 		{
 			...base,
 			type: ERecord.DS,
