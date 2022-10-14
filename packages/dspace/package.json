@@ -1,6 +1,6 @@
 {
   "name": "dspace",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Dspace is a simple layer to handle DNS packet.",
   "main": "out/index.js",
   "type": "module",

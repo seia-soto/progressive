@@ -44,8 +44,8 @@ Dspace is working in progress to implement [Standard and Proposed Security Stand
   - Update operation code support (compatible with 1035 & 1123)
 - [RFC 2308] Negative Caching of DNS Queries (DNS NCACHE) (March 1998): https://datatracker.ietf.org/doc/html/rfc2308
   - Nothing to do
-- **EXPERIMENTAL** [RFC 4034] DNSSEC Resource Records (March 2005): https://datatracker.ietf.org/doc/html/rfc4034
-  - NSEC resource record support (only)
+- **EXPERIMENTAL (might have some bugs)** [RFC 4034] DNSSEC Resource Records (March 2005): https://datatracker.ietf.org/doc/html/rfc4034
+  - DNS Security Extension related Resource Records
 
 **Server**
 
