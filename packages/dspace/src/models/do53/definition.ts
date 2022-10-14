@@ -244,7 +244,7 @@ export interface IResourceOfDnskey extends IResource {
       },
       protocol: 3,
       algorithm: EKeyAlgorithm,
-      publicKey: string
+      publicKey: number[]
     }
   }
 }

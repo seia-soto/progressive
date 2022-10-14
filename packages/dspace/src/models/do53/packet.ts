@@ -152,18 +152,17 @@ const packResourceOfWks: TPackSpecificResource<IResourceOfWks> = (r, compression
 };
 
 const packResourceOfDnskey: TPackSpecificResource<IResourceOfDnskey> = (r, compressionMap) => {
-	const publicKey = packText(r.data.source.publicKey);
-	compressionMap.__offset += 32 + (publicKey.length * 8);
+	compressionMap.__offset += 32 + r.data.source.publicKey.length;
 
 	return [
-		[4 + publicKey.length, 16],
+		[4 + r.data.source.publicKey.length, 16],
 		[0, 7],
 		[r.data.source.flags.isZoneKey, 1],
 		[0, 7],
 		[r.data.source.flags.isSecureEntryPoint, 1],
 		[r.data.source.protocol, 8],
 		[r.data.source.algorithm, 8],
-		...publicKey,
+		...r.data.source.publicKey.map(k => [k, 8] as const),
 	] as const;
 };
 
@@ -637,10 +636,16 @@ const unpackResourceOfDnskey: TUnpackSpecificResource<IResourceOfDnskey> = (buff
 
 	const algorithm = range(buffer, offset, 8);
 	offset += 8;
-	const [n, publicKey] = unpackText(buffer, offset);
+
+	const publicKey: number[] = [];
+
+	for (let i = 3; i < base.data.size - 1; i++) {
+		publicKey.push(range(buffer, offset, 8));
+		offset += 8;
+	}
 
 	return [
-		n,
+		offset,
 		{
 			...base,
 			type: ERecord.DNSKEY,

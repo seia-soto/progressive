@@ -61,7 +61,7 @@ test('packet', async t => {
 	});
 });
 
-test('@1.1.1.2 cloudflare.com', async t => {
+test('@8.8.8.8 cloudflare.com', async t => {
 	const query = () => new Promise(resolve => {
 		const soc = createSocket('udp4');
 		const req = pack({
@@ -71,17 +71,13 @@ test('@1.1.1.2 cloudflare.com', async t => {
 					type: ERecord.A,
 					name: 'cloudflare.com',
 				},
-				{
-					type: ERecord.A,
-					name: 'speed.cloudflare.com',
-				},
 			],
 			options: {
 				isRecursionDesired: 1,
 			},
 		});
 
-		soc.send(req, 53, '1.1.1.2');
+		soc.send(req, 53, '8.8.8.8');
 		soc.once('message', message => resolve(message));
 	});
 
