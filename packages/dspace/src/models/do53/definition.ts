@@ -112,81 +112,57 @@ export interface IResource {
   type: ERecord,
   class: EClass,
   ttl: number,
-  data: {
-    size: number,
-    source: unknown
-  }
+  data: unknown
 }
 
 // Standard Resource Records: https://datatracker.ietf.org/doc/html/rfc1035#section-3.3
 export interface IResourceOfCname extends IResource {
   type: ERecord.CNAME,
-  data: {
-    size: number,
-    source: string
-  }
+  data: string
 }
 
 export interface IResourceOfHinfo extends IResource {
   type: ERecord.HINFO,
   data: {
-    size: number,
-    source: {
-      cpu: string,
-      os: string
-    }
+    cpu: string,
+    os: string
   }
 }
 
 export interface IResourceOfMx extends IResource {
   type: ERecord.MX,
   data: {
-    size: number,
-    source: {
-      preference: number,
-      exchange: string
-    }
+    preference: number,
+    exchange: string
   }
 }
 
 export interface IResourceOfNs extends IResource {
   type: ERecord.NS,
-  data: {
-    size: number,
-    source: string
-  }
+  data: string
 }
 
 export interface IResourceOfPtr extends IResource {
   type: ERecord.PTR,
-  data: {
-    size: number,
-    source: string
-  }
+  data: string
 }
 
 export interface IResourceOfSoa extends IResource {
   type: ERecord.SOA,
   data: {
-    size: number,
-    source: {
-      name: string,
-      representative: string,
-      serial: number,
-      refreshIn: number,
-      retryIn: number,
-      expireIn: number,
-      ttl: number
-    }
+    name: string,
+    representative: string,
+    serial: number,
+    refreshIn: number,
+    retryIn: number,
+    expireIn: number,
+    ttl: number
   }
 }
 
 export interface IResourceOfTxt extends IResource {
   type: ERecord.TXT,
-  data: {
-    size: number,
-    source: string
-  }
+  data: string
 }
 
 // Internet specific Resource Records: https://datatracker.ietf.org/doc/html/rfc1035#section-3.4
@@ -194,21 +170,15 @@ export type TInternetAddress = readonly [number, number, number, number]
 
 export interface IResourceOfA extends IResource {
   type: ERecord.A,
-  data: {
-    size: 4,
-    source: TInternetAddress
-  }
+  data: TInternetAddress
 }
 
 export interface IResourceOfWks extends IResource {
   type: ERecord.WKS,
   data: {
-    size: number,
-    source: {
-      address: TInternetAddress,
-      protocol: number,
-      ports: number[]
-    }
+    address: TInternetAddress,
+    protocol: number,
+    ports: number[]
   }
 }
 
@@ -216,8 +186,7 @@ export interface IResourceOfWks extends IResource {
 export interface IResourceOfNull extends IResource {
   type: ERecord.NULL,
   data: {
-    size: number,
-    source: null
+    size: number
   }
 }
 
@@ -236,45 +205,36 @@ export const enum EKeyAlgorithm {
 export interface IResourceOfDnskey extends IResource {
   type: ERecord.DNSKEY,
   data: {
-    size: number,
-    source: {
-      flags: {
-        isZoneKey: TFlag, // 7th bit
-        isSecureEntryPoint: TFlag // 15th bit
-      },
-      protocol: 3,
-      algorithm: EKeyAlgorithm,
-      publicKey: number[]
-    }
+    flags: {
+      isZoneKey: TFlag, // 7th bit
+      isSecureEntryPoint: TFlag // 15th bit
+    },
+    protocol: 3,
+    algorithm: EKeyAlgorithm,
+    publicKey: number[]
   }
 }
 
 export interface IResourceOfRrsig extends IResource {
   type: ERecord.RRSIG,
   data: {
-    size: number,
-    source: {
-      typeCovered: ERecord,
-      algorithm: EKeyAlgorithm,
-      labels: number,
-      originalTtl: number,
-      signatureExpiration: number,
-      signatureInception: number,
-      keyTag: number,
-      signerName: string,
-      signature: number[]
-    }
+    typeCovered: ERecord,
+    algorithm: EKeyAlgorithm,
+    labels: number,
+    originalTtl: number,
+    signatureExpiration: number,
+    signatureInception: number,
+    keyTag: number,
+    signerName: string,
+    signature: number[]
   }
 }
 
 export interface IResourceOfNsec extends IResource {
   type: ERecord.NSEC,
   data: {
-    size: number,
-    source: {
-      nextName: string,
-      typeBitMap: ERecord[]
-    }
+    nextName: string,
+    typeBitMap: ERecord[]
   }
 }
 
@@ -286,13 +246,10 @@ export const enum EDigestType {
 export interface IResourceOfDs extends IResource {
   type: ERecord.DS,
   data: {
-    size: number,
-    source: {
-      keyTag: number,
-      algorithm: EKeyAlgorithm,
-      digestType: EDigestType,
-      digest: number[]
-    }
+    keyTag: number,
+    algorithm: EKeyAlgorithm,
+    digestType: EDigestType,
+    digest: number[]
   }
 }
 

@@ -56,29 +56,29 @@ const packResourceOfA: TPackSpecificResource<IResourceOfA> = (r, compressionMap)
 	compressionMap.__offset += 32;
 
 	return [
-		[r.data.size, 16],
-		...r.data.source.map(k => [k, 8] as const),
+		[4, 16],
+		...r.data.map(k => [k, 8] as const),
 	] as const;
 };
 
 const packResourceOfCnameLike: TPackSpecificResource<IResourceOfCname | IResourceOfNs | IResourceOfPtr> = (r, compressionMap) => {
-	const label = packLabel(r.data.source, compressionMap);
+	const label = packLabel(r.data, compressionMap);
 
 	return [
-		[r.data.size || label.length, 16],
+		[label.length, 16],
 		...label,
 	] as const;
 };
 
 const packResourceOfHinfo: TPackSpecificResource<IResourceOfHinfo> = (r, compressionMap) => {
 	const text = packText(
-		r.data.source.cpu + '\0'
-		+ r.data.source.os + '\0',
+		r.data.cpu + '\0'
+		+ r.data.os + '\0',
 	);
 	compressionMap.__offset += text.length * 8;
 
 	return [
-		[r.data.size || text.length, 16],
+		[text.length, 16],
 		...text,
 	] as const;
 };
@@ -86,38 +86,38 @@ const packResourceOfHinfo: TPackSpecificResource<IResourceOfHinfo> = (r, compres
 const packResourceOfMx: TPackSpecificResource<IResourceOfMx> = (r, compressionMap) => {
 	compressionMap.__offset += 16;
 
-	const label = packLabel(r.data.source.exchange, compressionMap);
+	const label = packLabel(r.data.exchange, compressionMap);
 
 	return [
-		[r.data.size || (2 + label.length), 16],
-		[r.data.source.preference, 16],
+		[2 + label.length, 16],
+		[r.data.preference, 16],
 		...label,
 	] as const;
 };
 
 const packResourceOfSoa: TPackSpecificResource<IResourceOfSoa> = (r, compressionMap) => {
-	const name = packLabel(r.data.source.name, compressionMap);
-	const representative = packLabel(r.data.source.representative, compressionMap);
+	const name = packLabel(r.data.name, compressionMap);
+	const representative = packLabel(r.data.representative, compressionMap);
 	compressionMap.__offset += 32 * 5;
 
 	return [
-		[r.data.size || (name.length + representative.length + (4 * 5)), 16],
+		[name.length + representative.length + (4 * 5), 16],
 		...name,
 		...representative,
-		[r.data.source.serial, 32],
-		[r.data.source.refreshIn, 32],
-		[r.data.source.retryIn, 32],
-		[r.data.source.expireIn, 32],
-		[r.data.source.ttl, 32],
+		[r.data.serial, 32],
+		[r.data.refreshIn, 32],
+		[r.data.retryIn, 32],
+		[r.data.expireIn, 32],
+		[r.data.ttl, 32],
 	] as const;
 };
 
 const packResourceOfTxt: TPackSpecificResource<IResourceOfTxt> = (r, compressionMap) => {
-	const text = packText(r.data.source + '\0');
+	const text = packText(r.data + '\0');
 	compressionMap.__offset += text.length * 8;
 
 	return [
-		[r.data.size || text.length, 16],
+		[text.length, 16],
 		...text,
 	] as const;
 };
@@ -128,7 +128,7 @@ const packResourceOfWks: TPackSpecificResource<IResourceOfWks> = (r, compression
 
 	// 65535 - 32 - 8
 	for (let i = 0; i < 65495; i++) {
-		if (r.data.source.ports.indexOf(i) < 0) {
+		if (r.data.ports.indexOf(i) < 0) {
 			map.push([0, 1]);
 
 			continue;
@@ -136,7 +136,7 @@ const packResourceOfWks: TPackSpecificResource<IResourceOfWks> = (r, compression
 
 		map.push([1, 1]);
 
-		if (++pushed === r.data.source.ports.length) {
+		if (++pushed === r.data.ports.length) {
 			break;
 		}
 	}
@@ -145,31 +145,31 @@ const packResourceOfWks: TPackSpecificResource<IResourceOfWks> = (r, compression
 
 	return [
 		[4 + 1 + Math.ceil(pushed / 8), 16],
-		...r.data.source.address.map(k => [k, 8] as const),
-		[r.data.source.protocol, 8],
+		...r.data.address.map(k => [k, 8] as const),
+		[r.data.protocol, 8],
 		...map,
 	] as const;
 };
 
 const packResourceOfDnskey: TPackSpecificResource<IResourceOfDnskey> = (r, compressionMap) => {
-	compressionMap.__offset += 32 + r.data.source.publicKey.length;
+	compressionMap.__offset += 32 + r.data.publicKey.length;
 
 	return [
-		[4 + r.data.source.publicKey.length, 16],
+		[4 + r.data.publicKey.length, 16],
 		[0, 7],
-		[r.data.source.flags.isZoneKey, 1],
+		[r.data.flags.isZoneKey, 1],
 		[0, 7],
-		[r.data.source.flags.isSecureEntryPoint, 1],
-		[r.data.source.protocol, 8],
-		[r.data.source.algorithm, 8],
-		...r.data.source.publicKey.map(k => [k, 8] as const),
+		[r.data.flags.isSecureEntryPoint, 1],
+		[r.data.protocol, 8],
+		[r.data.algorithm, 8],
+		...r.data.publicKey.map(k => [k, 8] as const),
 	] as const;
 };
 
 const packResourceOfNsec: TPackSpecificResource<IResourceOfNsec> = (r, compressionMap) => {
-	const nextName = packLabel(r.data.source.nextName, compressionMap);
+	const nextName = packLabel(r.data.nextName, compressionMap);
 
-	const typeBitMap = r.data.source.typeBitMap.sort((a, b) => a - b);
+	const typeBitMap = r.data.typeBitMap.sort((a, b) => a - b);
 	const bytes: number[] = [];
 
 	for (let i = 0; i < typeBitMap.length; i++) {
@@ -201,34 +201,34 @@ const packResourceOfNsec: TPackSpecificResource<IResourceOfNsec> = (r, compressi
 };
 
 const packResourceOfRrsig: TPackSpecificResource<IResourceOfRrsig> = (r, compressionMap) => {
-	const signerName = packLabel(r.data.source.signerName, {__offset: compressionMap.__offset});
-	const signature = r.data.source.signature.map(k => [k, 8] as const);
+	const signerName = packLabel(r.data.signerName, {__offset: compressionMap.__offset});
+	const signature = r.data.signature.map(k => [k, 8] as const);
 	const size = (signerName.length + signature.length) + 18;
 	compressionMap.__offset = size * 8;
 
 	return [
 		[size / 8, 16],
-		[r.data.source.typeCovered, 16],
-		[r.data.source.algorithm, 8],
-		[r.data.source.labels, 8],
-		[r.data.source.originalTtl, 32],
-		[r.data.source.signatureExpiration, 32],
-		[r.data.source.signatureInception, 32],
-		[r.data.source.keyTag, 16],
+		[r.data.typeCovered, 16],
+		[r.data.algorithm, 8],
+		[r.data.labels, 8],
+		[r.data.originalTtl, 32],
+		[r.data.signatureExpiration, 32],
+		[r.data.signatureInception, 32],
+		[r.data.keyTag, 16],
 		...signerName,
 		...signature,
 	] as const;
 };
 
 const packResourceOfDs: TPackSpecificResource<IResourceOfDs> = (r, compressionMap) => {
-	const digest = r.data.source.digest.map(k => [k, 8] as const);
+	const digest = r.data.digest.map(k => [k, 8] as const);
 	const size = digest.length + 3;
 	compressionMap.__offset += size * 8;
 
 	return [
 		[size, 16],
-		[r.data.source.keyTag, 16],
-		[r.data.source.algorithm, 8],
+		[r.data.keyTag, 16],
+		[r.data.algorithm, 8],
 		...digest,
 	] as const;
 };
@@ -453,10 +453,10 @@ export const unpackQuestion = (buffer: Buffer, offset: number): readonly [number
 };
 
 // eslint-disable-next-line no-unused-vars
-type TUnpackSpecificResource<IResourceSpecific> = (buffer: Buffer, offset: number, base: IResource) => readonly [number, IResourceSpecific]
+type TUnpackSpecificResource<IResourceSpecific> = (buffer: Buffer, offset: number, base: Omit<IResource, 'data'> & {data: {size: number}}) => readonly [number, IResourceSpecific]
 
 const unpackResourceOfA: TUnpackSpecificResource<IResourceOfA> = (buffer, offset, base) => {
-	const source: TInternetAddress = [
+	const data: TInternetAddress = [
 		range(buffer, offset, 8),
 		range(buffer, offset + 8, 8),
 		range(buffer, offset + 16, 8),
@@ -468,26 +468,20 @@ const unpackResourceOfA: TUnpackSpecificResource<IResourceOfA> = (buffer, offset
 		{
 			...base,
 			type: ERecord.A,
-			data: {
-				size: 4,
-				source,
-			},
+			data,
 		},
 	] as const;
 };
 
 const unpackResourceOfCnameLike: TUnpackSpecificResource<IResourceOfCname | IResourceOfNs | IResourceOfPtr> = (buffer, offset, base) => {
-	const [n, name] = unpackLabel(buffer, offset);
+	const [n, data] = unpackLabel(buffer, offset);
 
 	return [
 		n,
 		{
 			...base,
 			type: ERecord.CNAME | ERecord.NS | ERecord.PTR,
-			data: {
-				size: base.data.size,
-				source: name,
-			},
+			data,
 		},
 	] as const;
 };
@@ -501,10 +495,7 @@ const unpackResourceOfHinfo: TUnpackSpecificResource<IResourceOfHinfo> = (buffer
 		{
 			...base,
 			type: ERecord.HINFO,
-			data: {
-				size: base.data.size,
-				source: {cpu, os},
-			},
+			data: {cpu, os},
 		},
 	] as const;
 };
@@ -520,11 +511,8 @@ const unpackResourceOfMx: TUnpackSpecificResource<IResourceOfMx> = (buffer, offs
 			...base,
 			type: ERecord.MX,
 			data: {
-				size: base.data.size,
-				source: {
-					preference,
-					exchange,
-				},
+				preference,
+				exchange,
 			},
 		},
 	] as const;
@@ -549,16 +537,13 @@ const unpackResourceOfSoa: TUnpackSpecificResource<IResourceOfSoa> = (buffer, of
 			...base,
 			type: ERecord.SOA,
 			data: {
-				size: base.data.size,
-				source: {
-					name,
-					representative,
-					serial,
-					refreshIn,
-					retryIn,
-					expireIn,
-					ttl,
-				},
+				name,
+				representative,
+				serial,
+				refreshIn,
+				retryIn,
+				expireIn,
+				ttl,
 			},
 		},
 	] as const;
@@ -573,10 +558,7 @@ const unpackResourceOfTxt: TUnpackSpecificResource<IResourceOfTxt> = (buffer, of
 		{
 			...base,
 			type: ERecord.TXT,
-			data: {
-				size: base.data.size,
-				source: text,
-			},
+			data: text,
 		},
 	] as const;
 };
@@ -611,12 +593,9 @@ const unpackResourceOfWks: TUnpackSpecificResource<IResourceOfWks> = (buffer, of
 			...base,
 			type: ERecord.WKS,
 			data: {
-				size: base.data.size,
-				source: {
-					address,
-					protocol,
-					ports,
-				},
+				address,
+				protocol,
+				ports,
 			},
 		},
 	] as const;
@@ -649,16 +628,13 @@ const unpackResourceOfDnskey: TUnpackSpecificResource<IResourceOfDnskey> = (buff
 			...base,
 			type: ERecord.DNSKEY,
 			data: {
-				size: base.data.size,
-				source: {
-					flags: {
-						isZoneKey,
-						isSecureEntryPoint,
-					},
-					protocol,
-					algorithm,
-					publicKey,
+				flags: {
+					isZoneKey,
+					isSecureEntryPoint,
 				},
+				protocol,
+				algorithm,
+				publicKey,
 			},
 		},
 	] as const;
@@ -698,11 +674,8 @@ const unpackResourceOfNsec: TUnpackSpecificResource<IResourceOfNsec> = (buffer, 
 			...base,
 			type: ERecord.NSEC,
 			data: {
-				size: base.data.size,
-				source: {
-					nextName,
-					typeBitMap,
-				},
+				nextName,
+				typeBitMap,
 			},
 		},
 	] as const;
@@ -738,18 +711,15 @@ const unpackResourceOfRrsig: TUnpackSpecificResource<IResourceOfRrsig> = (buffer
 			...base,
 			type: ERecord.RRSIG,
 			data: {
-				size: base.data.size,
-				source: {
-					typeCovered,
-					algorithm,
-					labels,
-					originalTtl,
-					signatureExpiration,
-					signatureInception,
-					keyTag,
-					signerName,
-					signature,
-				},
+				typeCovered,
+				algorithm,
+				labels,
+				originalTtl,
+				signatureExpiration,
+				signatureInception,
+				keyTag,
+				signerName,
+				signature,
 			},
 		},
 	] as const;
@@ -775,13 +745,10 @@ const unpackResourceOfDs: TUnpackSpecificResource<IResourceOfDs> = (buffer, offs
 			...base,
 			type: ERecord.DS,
 			data: {
-				size: base.data.size,
-				source: {
-					keyTag,
-					algorithm,
-					digestType,
-					digest,
-				},
+				keyTag,
+				algorithm,
+				digestType,
+				digest,
 			},
 		},
 	] as const;
@@ -798,7 +765,7 @@ export const unpackResource = (buffer: Buffer, offset: number, order: EResourceO
 	const size = range(buffer, offset, 16);
 	offset += 16;
 
-	const base: IResource = {order, name, type, class: kClass, ttl, data: {size, source: null}};
+	const base = {order, name, type, class: kClass, ttl, data: {size}};
 
 	switch (type) {
 		case ERecord.A:
@@ -864,10 +831,6 @@ export const unpackResource = (buffer: Buffer, offset: number, order: EResourceO
 		{
 			...base,
 			type: ERecord.NULL,
-			data: {
-				size,
-				source: null,
-			},
 		},
 	] as const;
 };
